@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Camp — Costing &amp; Pricing</title>
+<style>
+:root{
+  --navy:#1f3864; --ink:#1b2432; --muted:#6b7686; --line:#e2e7ef; --bg:#f5f7fa;
+  --accent:#1f3864; --good:#1e6b3a; --bad:#9c2b2b; --amber:#8a6100;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;color:var(--ink);background:var(--bg)}
+button{font:inherit;cursor:pointer}
+a{color:var(--accent);text-decoration:none}
+code{background:#eef1f6;padding:1px 5px;border-radius:3px;font-size:12px}
+
+/* layout */
+.shell{display:flex;min-height:100vh}
+.side{width:216px;flex:0 0 216px;background:var(--navy);color:#fff;display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.brand{padding:18px 18px 14px;border-bottom:1px solid rgba(255,255,255,.14)}
+.brand b{display:block;font-size:17px;letter-spacing:.3px}
+.brand span{display:block;font-size:11.5px;opacity:.75;letter-spacing:.4px;text-transform:uppercase;margin-top:2px}
+.brand.big{padding:0 0 18px;border:0;color:var(--navy)}
+.brand.big b{font-size:22px}
+.brand.big span{opacity:.6;color:var(--navy)}
+.side nav{display:flex;flex-direction:column;padding:10px 0;overflow:auto}
+.side nav a{color:rgba(255,255,255,.82);padding:9px 18px;font-size:13.5px;border-left:3px solid transparent}
+.side nav a:hover{background:rgba(255,255,255,.07);color:#fff}
+.side nav a.on{background:rgba(255,255,255,.12);color:#fff;border-left-color:#fff;font-weight:600}
+.sidefoot{margin-top:auto;padding:14px 18px;border-top:1px solid rgba(255,255,255,.14);font-size:12px}
+.sidefoot .who{opacity:.75;margin-bottom:6px}
+.sidefoot .link{color:#fff;background:none;border:0;padding:0;text-decoration:underline;font-size:12px}
+main{flex:1;min-width:0;padding:0 26px 60px}
+.top{display:flex;align-items:center;gap:16px;padding:18px 0 14px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.top h1{font-size:19px;margin:0;font-weight:650;letter-spacing:.2px}
+.top .actions{margin-left:auto;display:flex;gap:8px}
+
+/* bits */
+.bar{display:flex;align-items:center;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.grow{flex:1}
+.btn{background:var(--accent);color:#fff;border:1px solid var(--accent);padding:7px 13px;border-radius:5px;font-size:13px;font-weight:600}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:#fff;color:var(--accent);border-color:#c8d1e0}
+.btn.ghost:hover{background:#f0f3f8}
+.link{background:none;border:0;color:var(--accent);text-decoration:underline;padding:0;font-size:12.5px}
+.chip{background:#fff;border:1px solid #c8d1e0;color:var(--ink);padding:6px 12px;border-radius:16px;font-size:13px}
+.chip.on{background:var(--navy);border-color:var(--navy);color:#fff;font-weight:600}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.card{background:#fff;border:1px solid var(--line);border-radius:7px;overflow:hidden;margin-bottom:16px}
+.card.pad{padding:16px 18px}
+.card h3{margin:0 0 10px;font-size:14px;font-weight:650}
+.card h4{margin:20px 0 8px;font-size:12.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);font-weight:700}
+.pad{padding:14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}.side{display:none}}
+
+/* tables */
+table.grid{width:100%;border-collapse:collapse;font-size:12.8px}
+table.grid th{background:#f2f5f9;text-align:left;padding:9px 10px;font-weight:650;color:#44506a;border-bottom:1px solid var(--line);position:sticky;top:0;white-space:nowrap}
+table.grid td{padding:8px 10px;border-bottom:1px solid #eef1f6;vertical-align:top}
+table.grid tbody tr:hover{background:#fafbfd}
+table.grid tbody tr.newprod td{border-top:2px solid #cfd8e6}
+table.grid.compact th,table.grid.compact td{padding:7px 8px;font-size:12.2px}
+input.qty{width:74px}
+table.grid tr.total td{font-weight:700;background:#f7f9fc;border-top:2px solid #dfe5ee}
+table.grid tr.diff td{background:#fffdf3}
+.r{text-align:right;font-variant-numeric:tabular-nums}
+.c{text-align:center}
+.up{color:var(--good)} .down{color:var(--bad)}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px}
+.stats.tight{grid-template-columns:repeat(3,1fr);margin-bottom:0}
+.stats.four{grid-template-columns:repeat(4,1fr);margin-bottom:0}
+.stat{background:#fff;border:1px solid var(--line);border-radius:7px;padding:13px 15px}
+.stat b{display:block;font-size:20px;font-weight:650;letter-spacing:-.3px}
+.stat span{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.stat.warn b{color:var(--bad)}
+
+/* formulations */
+.split{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+@media(max-width:1000px){.split{grid-template-columns:1fr}}
+.gradelistwrap{display:flex;flex-direction:column;gap:4px;max-height:78vh;overflow:auto;padding-right:4px}
+.gradelist{text-align:left;background:#fff;border:1px solid var(--line);border-radius:6px;padding:9px 11px;display:flex;flex-direction:column;gap:1px}
+.gradelist b{font-size:12.8px}
+.gradelist span{font-size:11.5px;color:var(--muted)}
+.gradelist i{font-size:10.5px;color:#9aa4b3;font-style:normal}
+.gradelist.on{border-color:var(--navy);box-shadow:inset 3px 0 0 var(--navy);background:#f7f9fd}
+.blockhead{display:flex;flex-direction:column;gap:2px;padding-bottom:10px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+.chain{display:flex;flex-direction:column;gap:0;margin:10px 0 4px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.chain>div{display:flex;justify-content:space-between;padding:7px 12px;border-bottom:1px solid #eef1f6;font-size:12.8px}
+.chain>div:last-child{border-bottom:0}
+.chain span{color:#44506a}
+.chain b{font-variant-numeric:tabular-nums}
+.chain .hl{background:#f2f5f9;font-weight:650}
+.chain .rule{font-style:normal;color:#9aa4b3;font-size:11px;margin-left:6px}
+
+/* trace */
+.cmpsels select{padding:8px 10px;border:1px solid #c8d1e0;border-radius:5px;font:inherit;font-size:13px;background:#fff;min-width:200px;flex:1}
+.search{flex:1;max-width:520px;padding:8px 12px;border:1px solid #c8d1e0;border-radius:5px;font:inherit}
+.hits{display:flex;flex-direction:column;gap:4px;max-height:78vh;overflow:auto}
+.hit{text-align:left;background:#fff;border:1px solid var(--line);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column}
+.hit b{font-size:12.5px;font-weight:600}
+.hit span{font-size:11px;color:var(--muted)}
+
+/* inputs */
+input.cell{width:92px;text-align:right;padding:4px 6px;border:1px solid #c8d1e0;border-radius:4px;font:inherit;font-size:12.5px;background:#fffdf5}
+input.cell:focus{outline:2px solid #c8d1e0;background:#fff}
+.tag{display:inline-block;background:#e8f2ea;color:var(--good);font-size:10.5px;padding:1px 6px;border-radius:9px;text-transform:uppercase;letter-spacing:.4px}
+.tag.grey{background:#eef1f6;color:#6b7686}
+.ok{color:var(--good);font-size:12.8px;margin:6px 0}
+.ok::before{content:"✓ ";font-weight:700}
+.warnline{color:var(--amber);font-size:12.8px;margin:6px 0}
+.auditline{font-size:12px;color:#44506a;padding:5px 0;border-bottom:1px solid #eef1f6}
+.verlines{background:#f7f9fc;padding:10px 14px!important}
+.auditline span{color:#9aa4b3;margin-right:6px}
+.auditline i{color:var(--muted)}
+ul.changes{margin:6px 0 0;padding-left:18px;font-size:12.8px}
+ul.changes li{margin-bottom:5px}
+.stale{background:#fff1f0;border:1px solid #f0b7b2;border-left:4px solid #9c2b2b;border-radius:5px;padding:12px 14px;margin-bottom:16px;font-size:13px}
+.stale b{color:#9c2b2b;display:block;margin-bottom:6px}
+.stale p{margin:0 0 8px}
+.btn.danger{background:#9c2b2b;border-color:#9c2b2b}
+.stamp{display:inline-block;background:#fff4d6;color:#7a5300;border:1px solid #f0dca8;padding:5px 11px;border-radius:4px;font-size:11.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:14px}
+.preview{background:#f7f9fc;border:1px solid var(--line);border-radius:5px;padding:10px 12px;margin-top:14px;font-size:12.5px}
+
+/* login */
+.loginwrap{min-height:100vh;display:grid;place-items:center;background:linear-gradient(160deg,#1f3864,#2b4a7d)}
+.login{background:#fff;border-radius:10px;padding:30px 30px 24px;width:min(460px,92vw);box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.rolebtn{display:flex;flex-direction:column;gap:2px;width:100%;text-align:left;background:#fff;border:1px solid var(--line);border-radius:7px;padding:12px 14px;margin-bottom:9px}
+.rolebtn:hover{border-color:var(--navy);background:#f7f9fd}
+.rolebtn b{font-size:14px;color:var(--navy)}
+.rolebtn span{font-size:12px;color:var(--muted)}
+.note{font-size:11.5px;color:#8a94a3;margin-top:14px;line-height:1.5;border-top:1px solid var(--line);padding-top:12px}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(16,24,40,.55);display:grid;place-items:center;z-index:50;padding:20px}
+.modal{background:#fff;border-radius:9px;padding:22px 24px;width:min(520px,94vw);max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+.modal h2{margin:0 0 4px;font-size:17px}
+.modal.narrow{width:min(400px,92vw)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+.pwerr{color:#9c2b2b;font-size:12.5px;margin-top:8px;min-height:16px}
+.modal label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:14px 0 4px;font-weight:700}
+.modal input,.modal select{width:100%;padding:8px 10px;border:1px solid #c8d1e0;border-radius:5px;font:inherit;font-size:13.5px;background:#fff}
+.modalbar{display:flex;justify-content:flex-end;gap:8px;margin-top:20px}
+
+/* print */
+@media print{
+  .side,.top .actions,.bar,.modal,.overlay,.stale{background:#fff1f0;border:1px solid #f0b7b2;border-left:4px solid #9c2b2b;border-radius:5px;padding:12px 14px;margin-bottom:16px;font-size:13px}
+.stale b{color:#9c2b2b;display:block;margin-bottom:6px}
+.stale p{margin:0 0 8px}
+.btn.danger{background:#9c2b2b;border-color:#9c2b2b}
+.stamp{display:none!important}
+  body{background:#fff}
+  main{padding:0}
+  .shell{display:block}
+  .split{display:block}
+  .gradelistwrap{display:none}
+  .card{border:1px solid #ccc;break-inside:avoid}
+  table.grid th{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .top{border-bottom:1px solid #999}
+  .chain .hl{background:#eee!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>window.__DB__ = {"materials":[{"id":1,"name":"LZ 7070","price":425,"basis":"L","density":1,"transport":10,"landed":435.0},{"id":2,"name":"CRISTOL PPD LX 250","price":575,"basis":"L","density":1,"transport":10,"landed":585.0},{"id":3,"name":"V 255","price":207,"basis":"L","density":1,"transport":10,"landed":217.0},{"id":4,"name":"E 7889D MIX / KUSA FOAM SIM","price":1300,"basis":"L","density":1,"transport":10,"landed":1310.0},{"id":5,"name":"DYE","price":1000,"basis":"L","density":1,"transport":10,"landed":1010.0},{"id":6,"name":"LZ 3112","price":797,"basis":"L","density":1,"transport":10,"landed":807.0},{"id":7,"name":"RED DYE","price":1000,"basis":"L","density":1,"transport":10,"landed":1010.0},{"id":8,"name":"KUSA HF S91","price":725,"basis":"L","density":1,"transport":10,"landed":735.0},{"id":9,"name":"DEFOMER","price":1300,"basis":"L","density":1,"transport":10,"landed":1310.0},{"id":10,"name":"KUSA HFA 86","price":725,"basis":"L","density":1,"transport":10,"landed":735.0},{"id":11,"name":"DM WATER","price":2,"basis":"L","density":1,"transport":0,"landed":2.0},{"id":12,"name":"ARTECO","price":245,"basis":"L","density":1,"transport":10,"landed":255.0},{"id":13,"name":"GREEN DYE","price":1320,"basis":"L","density":1,"transport":10,"landed":1330.0},{"id":14,"name":"LZ 7550 (replaces discontinued LZ 7535)","price":427,"basis":"L","density":1,"transport":10,"landed":437.0},{"id":15,"name":"LZ 1038U","price":622,"basis":"L","density":1,"transport":10,"landed":632.0},{"id":16,"name":"LZ 6200AG","price":707,"basis":"L","density":1,"transport":10,"landed":717.0},{"id":17,"name":"LZ 6111","price":692,"basis":"L","density":1,"transport":10,"landed":702.0},{"id":18,"name":"INF 1879","price":375,"basis":"L","density":1,"transport":10,"landed":385.0},{"id":19,"name":"SN 500","price":136,"basis":"L","density":0.877,"transport":3.4,"landed":158.474116},{"id":20,"name":"SN 150 / H 150","price":133,"basis":"L","density":0.8422,"transport":3.4,"landed":161.319734},{"id":21,"name":"BS 150","price":151.29,"basis":"L","density":0.89,"transport":12,"landed":181.988764},{"id":22,"name":"H 500 Barrel","price":160.4,"basis":"L","density":0.86,"transport":12,"landed":198.511628},{"id":23,"name":"H 150 Barrel","price":149.5,"basis":"L","density":0.842,"transport":12,"landed":189.553444}],"grades":[{"id":1,"code":"Rider_Bulk","desc":"Rider 4T Gold SAE 20W-40 SN","cat":"MCO","grp":"Group II","density":0.87,"loss":0.002,"conv":11,"form":[[19,0.904],[18,0.025],[2,0.0008],[3,0.07],[4,0.0001],[5,0.0001]]},{"id":2,"code":"Top1_Bulk","desc":"TOP-1 4T HH SAE 20W 40 - Red SL","cat":"MCO","grp":"Group II","density":0.87,"loss":0.002,"conv":9,"form":[[19,0.9147],[18,0.02],[3,0.065],[4,0.0001],[5,0.0002]]},{"id":3,"code":"Spin_Bulk","desc":"Euro Gold SAE 15W 40 / Spin SAE 15W 40","cat":"DEO","grp":"Group II","density":0.86,"loss":0.002,"conv":11,"form":[[20,0.15],[19,0.6874],[2,0.0025],[3,0.08],[4,0.0001],[14,0.08]]},{"id":4,"code":"GearOIl_90_Bulk","desc":"Gear Oil GL-4 SAE 90","cat":"AGO","grp":"Group II","density":0.88,"loss":0.002,"conv":11,"form":[[19,0.4888],[21,0.5],[2,0.001],[4,0.0002],[15,0.01]]},{"id":5,"code":"GearOIl_140_Bulk","desc":"Gear Oil GL-4 SAE 140","cat":"AGO","grp":"Group I","density":0.88,"loss":0.002,"conv":11,"form":[[21,0.9888],[2,0.001],[4,0.0002],[15,0.01]]},{"id":6,"code":"GearOIl_85W_Bulk","desc":"Gear Oil GL5 SAE 85W/140","cat":"AGO","grp":"Group II","density":0.88,"loss":0.002,"conv":11,"form":[[21,0.9888],[2,0.001],[4,0.0002],[15,0.01]]},{"id":7,"code":"WBO_Bulk","desc":"Wetbrake Oil","cat":"UTTO","grp":"Group II","density":0.85,"loss":0.002,"conv":11,"form":[[20,0.693],[19,0.2023],[2,0.0025],[3,0.065],[4,0.0001],[5,0.0001],[17,0.037]]},{"id":8,"code":"Cool_Bulk","desc":"Glycool (Coolant)","cat":"AFC","grp":"Group I","density":1,"loss":0.002,"conv":8,"form":[[11,0.99],[12,0.01]]},{"id":9,"code":"TQA_Bulk","desc":"TQA","cat":"ATO","grp":"Group II","density":0.85,"loss":0.002,"conv":11,"form":[[20,0.73],[19,0.1965],[2,0.003],[3,0.05],[4,0.0002],[6,0.02],[7,0.0003]]},{"id":10,"code":"Front_Fork_Bulk","desc":"Front Fork Oil","cat":"FFO","grp":"Group II","density":0.84,"loss":0.002,"conv":11,"form":[[20,0.5978],[22,0.4],[8,0.002],[9,0.0002]]},{"id":11,"code":"Bullet_Bulk","desc":"Bull 4T SAE 15W 50","cat":"MCO","grp":"Group II","density":0.87,"loss":0.002,"conv":11,"form":[[20,0.1653],[19,0.4717],[22,0.15],[2,0.0025],[3,0.14],[5,0.0001],[9,0.0002],[18,0.0702]]},{"id":12,"code":"CF4_Red_Bulk","desc":"Euro-3 SAE 20W 40 -CF4+","cat":"DEO","grp":"Group II","density":0.86,"loss":0.002,"conv":11,"form":[[19,0.8771],[2,0.0025],[3,0.07],[4,0.0001],[7,0.0003],[14,0.05]]},{"id":13,"code":"CF4_Gold_Bulk","desc":"Euro Diesel SAE 15W 40 -CF4+","cat":"DEO","grp":"Group II","density":0.86,"loss":0.002,"conv":11,"form":[[19,0.8772],[2,0.0025],[3,0.07],[4,0.0001],[5,0.0002],[14,0.05]]},{"id":14,"code":"Hydrex_TH46_Bulk","desc":"Hydrex TH 46","cat":"DEO","grp":"Group II","density":0.84,"loss":0.002,"conv":11,"form":[[20,0.592],[19,0.4],[8,0.008]]},{"id":15,"code":"Hydrex_HLP68_Bulk","desc":"Hydrex HLP 68","cat":"DEO","grp":"Group II","density":0.85,"loss":0.002,"conv":11,"form":[[20,0.4],[19,0.592],[8,0.008]]}],"packs":[{"id":1,"label":"120 ml","key":0.12,"litres":0.12,"lpc":12,"cq":100,"cp":11.5,"capq":0,"capp":0,"lq":0,"lp":0,"ctq":1,"ctp":70},{"id":2,"label":"175 ml","key":0.175,"litres":0.175,"lpc":10.5,"cq":60,"cp":6.7,"capq":0,"capp":0,"lq":62,"lp":0.65,"ctq":1,"ctp":66},{"id":3,"label":"350 ml","key":0.35,"litres":0.35,"lpc":10.5,"cq":30,"cp":8.27,"capq":0,"capp":0,"lq":32,"lp":0.75,"ctq":1,"ctp":70},{"id":4,"label":"500 ml","key":0.5,"litres":0.5,"lpc":20,"cq":40,"cp":5.98,"capq":40,"capp":1.85,"lq":41,"lp":1.2,"ctq":1,"ctp":70},{"id":5,"label":"800 ml","key":0.8,"litres":0.8,"lpc":16,"cq":20,"cp":11.5,"capq":20,"capp":1.85,"lq":21,"lp":1.6,"ctq":1,"ctp":80},{"id":6,"label":"900 ml","key":0.9,"litres":0.9,"lpc":18,"cq":20,"cp":11.5,"capq":20,"capp":1.85,"lq":21,"lp":1.6,"ctq":1,"ctp":80},{"id":7,"label":"1 Ltr","key":1,"litres":1,"lpc":20,"cq":20,"cp":11.5,"capq":20,"capp":1.85,"lq":21,"lp":1.6,"ctq":1,"ctp":80},{"id":8,"label":"2.5 Ltr","key":2.5,"litres":2.5,"lpc":15,"cq":6,"cp":29.66,"capq":6,"capp":1.85,"lq":7,"lp":3,"ctq":1,"ctp":66},{"id":9,"label":"3 Ltr","key":3,"litres":3,"lpc":18,"cq":6,"cp":29.66,"capq":6,"capp":1.85,"lq":7,"lp":3,"ctq":1,"ctp":66},{"id":10,"label":"3.5 Ltr","key":3.5,"litres":3.5,"lpc":17.5,"cq":5,"cp":34.5,"capq":5,"capp":1.85,"lq":7,"lp":4.6,"ctq":1,"ctp":66},{"id":11,"label":"5 Ltr Can","key":5,"litres":5,"lpc":20,"cq":4,"cp":39.88,"capq":4,"capp":1.85,"lq":5,"lp":4.6,"ctq":1,"ctp":66},{"id":12,"label":"5 Ltr Bucket","key":"5B","litres":5,"lpc":5,"cq":1,"cp":63.6,"capq":0,"capp":0,"lq":1,"lp":13,"ctq":0,"ctp":0},{"id":13,"label":"7.5 Ltr","key":7.5,"litres":7.5,"lpc":7.5,"cq":1,"cp":91.1,"capq":0,"capp":0,"lq":1,"lp":14,"ctq":0,"ctp":0},{"id":14,"label":"8.5 Ltr","key":8.5,"litres":8.5,"lpc":8.5,"cq":1,"cp":116.7,"capq":0,"capp":0,"lq":1,"lp":15,"ctq":0,"ctp":0},{"id":15,"label":"10 Ltr","key":10,"litres":10,"lpc":10,"cq":1,"cp":116.7,"capq":0,"capp":0,"lq":1,"lp":17,"ctq":0,"ctp":0},{"id":16,"label":"20 Ltr","key":20,"litres":20,"lpc":20,"cq":1,"cp":176,"capq":0,"capp":0,"lq":1,"lp":17,"ctq":0,"ctp":0},{"id":17,"label":"40 Ltr","key":40,"litres":40,"lpc":40,"cq":1,"cp":450,"capq":0,"capp":0,"lq":1,"lp":17,"ctq":0,"ctp":0},{"id":18,"label":"50 Ltr","key":50,"litres":50,"lpc":50,"cq":1,"cp":450,"capq":0,"capp":0,"lq":1,"lp":17,"ctq":0,"ctp":0},{"id":19,"label":"210 Ltr","key":210,"litres":210,"lpc":210,"cq":1,"cp":1470,"capq":0,"capp":0,"lq":2,"lp":17,"ctq":0,"ctp":0}],"skus":[{"id":1,"code":"SKU0001","desc":"Camp Rider 4T 20W 40 - Golden - 0.9 LTR","brand":"Camp","grade":1,"pack":6,"hsn":27101980,"gst":0.18},{"id":2,"code":"SKU0002","desc":"Camp Rider 4T 20W 40 - Golden - 1 LTR","brand":"Camp","grade":1,"pack":7,"hsn":27101980,"gst":0.18},{"id":3,"code":"SKU0003","desc":"Camp Rider 4T 20W 40 - Golden - 20 LTR","brand":"Camp","grade":1,"pack":16,"hsn":27101980,"gst":0.18},{"id":4,"code":"SKU0004","desc":"Camp Rider 4T 20W 40 - Golden - 50 LTR","brand":"Camp","grade":1,"pack":18,"hsn":27101980,"gst":0.18},{"id":5,"code":"SKU0005","desc":"Camp Super SL 20W 40 - Red - 0.5 LTR","brand":"Camp","grade":2,"pack":4,"hsn":27101980,"gst":0.18},{"id":6,"code":"SKU0006","desc":"Camp Top-1 20W 40- Red - 0.9 LTR","brand":"Camp","grade":2,"pack":6,"hsn":27101980,"gst":0.18},{"id":7,"code":"SKU0007","desc":"Camp Top-1 20W 40- Red - 0.9 LCP","brand":"Camp","grade":2,"pack":6,"hsn":27101980,"gst":0.18},{"id":8,"code":"SKU0008","desc":"Camp Top-1 20W 40- Red - 1 LTR","brand":"Camp","grade":2,"pack":7,"hsn":27101980,"gst":0.18},{"id":9,"code":"SKU0009","desc":"Camp Top-1 20W 40- Red - 1 LCP","brand":"Camp","grade":2,"pack":7,"hsn":27101980,"gst":0.18},{"id":10,"code":"SKU0010","desc":"Camp Top-1 20W 40- Red - 50 LTR","brand":"Camp","grade":2,"pack":18,"hsn":27101980,"gst":0.18},{"id":11,"code":"SKU0011","desc":"Camp Spin 15W 40 -CI4+ - Golden - 0.5 LTR","brand":"Camp","grade":3,"pack":4,"hsn":27101980,"gst":0.18},{"id":12,"code":"SKU0012","desc":"Camp Spin 15W 40 -CI4+ - Golden - 1 LTR","brand":"Camp","grade":3,"pack":7,"hsn":27101980,"gst":0.18},{"id":13,"code":"SKU0013","desc":"Camp Spin 15W 40 -CI4+ - Golden - 2.5 LTR","brand":"Camp","grade":3,"pack":8,"hsn":27101980,"gst":0.18},{"id":14,"code":"SKU0014","desc":"Camp Spin 15W 40 -CI4+ - Golden 3 LTR","brand":"Camp","grade":3,"pack":9,"hsn":27101980,"gst":0.18},{"id":15,"code":"SKU0015","desc":"Camp Spin 15W 40 -CI4+ - Golden - 3.5 LTR","brand":"Camp","grade":3,"pack":10,"hsn":27101980,"gst":0.18},{"id":16,"code":"SKU0016","desc":"Camp Spin 15W 40 -CI4+ - Golden - 5 LTR","brand":"Camp","grade":3,"pack":11,"hsn":27101980,"gst":0.18},{"id":17,"code":"SKU0017","desc":"Camp Spin 15W 40 -CI4+ - Golden - 5 LTRB","brand":"Camp","grade":3,"pack":12,"hsn":27101980,"gst":0.18},{"id":18,"code":"SKU0018","desc":"Camp Spin 15W 40 -CI4+ - Golden - 7.5 LTR","brand":"Camp","grade":3,"pack":13,"hsn":27101980,"gst":0.18},{"id":19,"code":"SKU0019","desc":"Camp Spin 15W 40 -CI4+ - Golden - 8.5 LTR","brand":"Camp","grade":3,"pack":14,"hsn":27101980,"gst":0.18},{"id":20,"code":"SKU0020","desc":"Camp Spin 15W 40 -CI4+ - Golden - 10 LTR","brand":"Camp","grade":3,"pack":15,"hsn":27101980,"gst":0.18},{"id":21,"code":"SKU0021","desc":"Camp Spin 15W 40 -CI4+ - Golden - 20 LTR","brand":"Camp","grade":3,"pack":16,"hsn":27101980,"gst":0.18},{"id":22,"code":"SKU0022","desc":"Camp Spin 15W 40 -CI4+ - Golden - 50 LTR","brand":"Camp","grade":3,"pack":18,"hsn":27101980,"gst":0.18},{"id":23,"code":"SKU0023","desc":"Camp Tito 20W 40 -CH4+ - Golden - 0.5 LTR","brand":"Camp","grade":3,"pack":4,"hsn":27101980,"gst":0.18},{"id":24,"code":"SKU0024","desc":"Camp Super 20W 40 -CH4+ - Golden - 1 LTR","brand":"Camp","grade":3,"pack":7,"hsn":27101980,"gst":0.18},{"id":25,"code":"SKU0025","desc":"Camp Super 20W 40 -CH4+ - Golden - 2.5 LTR","brand":"Camp","grade":3,"pack":8,"hsn":27101980,"gst":0.18},{"id":26,"code":"SKU0026","desc":"Camp Super 20W 40 -CH4+ - Golden 3 LTR","brand":"Camp","grade":3,"pack":9,"hsn":27101980,"gst":0.18},{"id":27,"code":"SKU0027","desc":"Camp Super 20W 40 -CH4+ - Golden - 5 LTR","brand":"Camp","grade":3,"pack":11,"hsn":27101980,"gst":0.18},{"id":28,"code":"SKU0028","desc":"Camp Super 20W 40 -CH4+ - Golden - 5 LTRB","brand":"Camp","grade":3,"pack":12,"hsn":27101980,"gst":0.18},{"id":29,"code":"SKU0029","desc":"Camp Super 20W 40 -CH4+ - Golden - 7.5 LTR","brand":"Camp","grade":3,"pack":13,"hsn":27101980,"gst":0.18},{"id":30,"code":"SKU0030","desc":"Camp Super 20W 40 -CH4+ - Golden - 8.5 LTR","brand":"Camp","grade":3,"pack":14,"hsn":27101980,"gst":0.18},{"id":31,"code":"SKU0031","desc":"Camp Super 20W 40 -CH4+ - Golden - 10 LTR","brand":"Camp","grade":3,"pack":15,"hsn":27101980,"gst":0.18},{"id":32,"code":"SKU0032","desc":"Camp Super 20W 40 -CH4+ - Golden - 20 LTR","brand":"Camp","grade":3,"pack":16,"hsn":27101980,"gst":0.18},{"id":33,"code":"SKU0033","desc":"Camp Super 20W 40 -CH4+ - Golden - 50 LTR","brand":"Camp","grade":3,"pack":18,"hsn":27101980,"gst":0.18},{"id":34,"code":"SKU0034","desc":"Camp Step-1 Gear Oil 80W 90 - 0.5 LTR","brand":"Camp","grade":4,"pack":4,"hsn":27101980,"gst":0.18},{"id":35,"code":"SKU0035","desc":"Camp Step-1 Gear Oil 80W 90 - 1 LCP","brand":"Camp","grade":4,"pack":7,"hsn":27101980,"gst":0.18},{"id":36,"code":"SKU0036","desc":"Camp Step-1 Gear Oil 80W 90 - 2.5 LTR","brand":"Camp","grade":4,"pack":8,"hsn":27101980,"gst":0.18},{"id":37,"code":"SKU0037","desc":"Camp Step-1 Gear Oil 80W 90 - 5 LTR","brand":"Camp","grade":4,"pack":11,"hsn":27101980,"gst":0.18},{"id":38,"code":"SKU0038","desc":"Camp Step-1 Gear Oil 80W 90 - 5 LTRB","brand":"Camp","grade":4,"pack":12,"hsn":27101980,"gst":0.18},{"id":39,"code":"SKU0039","desc":"Camp Step-1 Gear Oil 80W 90 - 20 LTR","brand":"Camp","grade":4,"pack":16,"hsn":27101980,"gst":0.18},{"id":40,"code":"SKU0040","desc":"Camp Step-1 Gear Oil 80W 90 - 50 LTR","brand":"Camp","grade":4,"pack":18,"hsn":27101980,"gst":0.18},{"id":41,"code":"SKU0041","desc":"Camp Step-1 Gear Oil 90 - 0.5 LTR","brand":"Camp","grade":4,"pack":4,"hsn":27101980,"gst":0.18},{"id":42,"code":"SKU0042","desc":"Camp Step-1 Gear Oil 90 - 1 LCP","brand":"Camp","grade":4,"pack":7,"hsn":27101980,"gst":0.18},{"id":43,"code":"SKU0043","desc":"Camp Step-1 Gear Oil 90 - 2.5 LTR","brand":"Camp","grade":4,"pack":8,"hsn":27101980,"gst":0.18},{"id":44,"code":"SKU0044","desc":"Camp Step-1 Gear Oil 90 - 5 LTR","brand":"Camp","grade":4,"pack":11,"hsn":27101980,"gst":0.18},{"id":45,"code":"SKU0045","desc":"Camp Step-1 Gear Oil 90 - 5 LTRB","brand":"Camp","grade":4,"pack":12,"hsn":27101980,"gst":0.18},{"id":46,"code":"SKU0046","desc":"Camp Step-1 Gear Oil 90 - 20 LTR","brand":"Camp","grade":4,"pack":16,"hsn":27101980,"gst":0.18},{"id":47,"code":"SKU0047","desc":"Camp Step-1 Gear Oil 90 - 50 LTR","brand":"Camp","grade":4,"pack":18,"hsn":27101980,"gst":0.18},{"id":48,"code":"SKU0048","desc":"Camp Step-1 Gear Oil 140 - 0.5 LTR","brand":"Camp","grade":5,"pack":4,"hsn":27101980,"gst":0.18},{"id":49,"code":"SKU0049","desc":"Camp Step-1 Gear Oil 140 - 1 LCP","brand":"Camp","grade":5,"pack":7,"hsn":27101980,"gst":0.18},{"id":50,"code":"SKU0050","desc":"Camp Step-1 Gear Oil 140 - 2.5 LTR","brand":"Camp","grade":5,"pack":8,"hsn":27101980,"gst":0.18},{"id":51,"code":"SKU0051","desc":"Camp Step-1 Gear Oil 140 - 5 LTR","brand":"Camp","grade":5,"pack":11,"hsn":27101980,"gst":0.18},{"id":52,"code":"SKU0052","desc":"Camp Step-1 Gear Oil 140 - 5 LTRB","brand":"Camp","grade":5,"pack":12,"hsn":27101980,"gst":0.18},{"id":53,"code":"SKU0053","desc":"Camp Step-1 Gear Oil 140 - 20 LTR","brand":"Camp","grade":5,"pack":16,"hsn":27101980,"gst":0.18},{"id":54,"code":"SKU0054","desc":"Camp Step-1 Gear Oil 140 - 50 LTR","brand":"Camp","grade":5,"pack":18,"hsn":27101980,"gst":0.18},{"id":55,"code":"SKU0055","desc":"Camp Step-1 Gear Oil 85W 140 - 0.5 LTR","brand":"Camp","grade":6,"pack":4,"hsn":27101980,"gst":0.18},{"id":56,"code":"SKU0056","desc":"Camp Step-1 Gear Oil 85W 140 - 1 LCP","brand":"Camp","grade":6,"pack":7,"hsn":27101980,"gst":0.18},{"id":57,"code":"SKU0057","desc":"Camp Step-1 Gear Oil 85W 140 - 2.5 LTR","brand":"Camp","grade":6,"pack":8,"hsn":27101980,"gst":0.18},{"id":58,"code":"SKU0058","desc":"Camp Step-1 Gear Oil 85W 140 - 5 LTR","brand":"Camp","grade":6,"pack":11,"hsn":27101980,"gst":0.18},{"id":59,"code":"SKU0059","desc":"Camp Step-1 Gear Oil 85W 140 - 5 LTRB","brand":"Camp","grade":6,"pack":12,"hsn":27101980,"gst":0.18},{"id":60,"code":"SKU0060","desc":"Camp Step-1 Gear Oil 85W 140 - 20 LTR","brand":"Camp","grade":6,"pack":16,"hsn":27101980,"gst":0.18},{"id":61,"code":"SKU0061","desc":"Camp Step-1 Gear Oil 85W 140 - 50 LTR","brand":"Camp","grade":6,"pack":18,"hsn":27101980,"gst":0.18},{"id":62,"code":"SKU0062","desc":"Camp Wetclutch Oil  - 5 LTR","brand":"Camp","grade":7,"pack":11,"hsn":27101980,"gst":0.18},{"id":63,"code":"SKU0063","desc":"Camp Wetclutch Oil  - 5 LTRB","brand":"Camp","grade":7,"pack":12,"hsn":27101980,"gst":0.18},{"id":64,"code":"SKU0064","desc":"Camp Wetclutch Oil  - 20 LTR","brand":"Camp","grade":7,"pack":16,"hsn":27101980,"gst":0.18},{"id":65,"code":"SKU0065","desc":"Camp Wetclutch Oil  - 50 LTR","brand":"Camp","grade":7,"pack":18,"hsn":27101980,"gst":0.18},{"id":66,"code":"SKU0066","desc":"Camp TransQ - Red - 0.5 LTR","brand":"Camp","grade":9,"pack":4,"hsn":27101980,"gst":0.18},{"id":67,"code":"SKU0067","desc":"Camp TransQ - Red - 1 LCP","brand":"Camp","grade":9,"pack":7,"hsn":27101980,"gst":0.18},{"id":68,"code":"SKU0068","desc":"Camp TransQ - Red - 5 LTR","brand":"Camp","grade":9,"pack":11,"hsn":27101980,"gst":0.18},{"id":69,"code":"SKU0069","desc":"Camp TransQ - Red - 5 LTRB","brand":"Camp","grade":9,"pack":12,"hsn":27101980,"gst":0.18},{"id":70,"code":"SKU0070","desc":"Camp TransQ - Red - 20 LTR","brand":"Camp","grade":9,"pack":16,"hsn":27101980,"gst":0.18},{"id":71,"code":"SKU0071","desc":"Camp TransQ - Red - 50 LTR","brand":"Camp","grade":9,"pack":18,"hsn":27101980,"gst":0.18},{"id":72,"code":"SKU0072","desc":"Camp Coolex Green - 1 LCP","brand":"Camp","grade":8,"pack":7,"hsn":27101980,"gst":0.18},{"id":73,"code":"SKU0073","desc":"Camp Rider 4T 20W 40 - Golden - 210 LTR","brand":"Camp","grade":1,"pack":19,"hsn":27101980,"gst":0.18},{"id":74,"code":"SKU0074","desc":"Camp Top-1 20W 40- Red - 210 LTR","brand":"Camp","grade":2,"pack":19,"hsn":27101980,"gst":0.18},{"id":75,"code":"SKU0075","desc":"Camp Spin 15W 40 -CI4+ - Golden - 210 LTR","brand":"Camp","grade":3,"pack":19,"hsn":27101980,"gst":0.18},{"id":76,"code":"SKU0076","desc":"Camp Super 20W 40 -CH4+ - Golden - 210 LTR","brand":"Camp","grade":3,"pack":19,"hsn":27101980,"gst":0.18},{"id":77,"code":"SKU0077","desc":"Camp Step-1 Gear Oil 80W 90 - 210 LTR","brand":"Camp","grade":4,"pack":19,"hsn":27101980,"gst":0.18},{"id":78,"code":"SKU0078","desc":"Camp Step-1 Gear Oil 90 - 210 LTR","brand":"Camp","grade":4,"pack":19,"hsn":27101980,"gst":0.18},{"id":79,"code":"SKU0079","desc":"Camp Step-1 Gear Oil 140 - 210 LTR","brand":"Camp","grade":5,"pack":19,"hsn":27101980,"gst":0.18},{"id":80,"code":"SKU0080","desc":"Camp Step-1 Gear Oil 85W 140 - 210 LTR","brand":"Camp","grade":6,"pack":19,"hsn":27101980,"gst":0.18},{"id":81,"code":"SKU0081","desc":"Camp Wetclutch Oil  - 210 LTR","brand":"Camp","grade":7,"pack":19,"hsn":27101980,"gst":0.18},{"id":82,"code":"SKU0082","desc":"Camp TransQ - Red - 210 LTR","brand":"Camp","grade":9,"pack":19,"hsn":27101980,"gst":0.18},{"id":83,"code":"SKU0083","desc":"Camp FF Oil - 175ml","brand":"Camp","grade":10,"pack":2,"hsn":27101980,"gst":0.18},{"id":84,"code":"SKU0084","desc":"Camp FF Oil - 350ml","brand":"Camp","grade":10,"pack":3,"hsn":27101980,"gst":0.18},{"id":85,"code":"SKU0085","desc":"Camp Scootex Gear Oil - 120ml Pouch","brand":"Camp","grade":4,"pack":1,"hsn":27101980,"gst":0.18},{"id":86,"code":"SKU0086","desc":"Camp Bull 4T - 2.5 LTR","brand":"Camp","grade":11,"pack":8,"hsn":27101980,"gst":0.18},{"id":87,"code":"SKU0087","desc":"Camp Bull 4T - Red - 50 LTR","brand":"Camp","grade":11,"pack":18,"hsn":27101980,"gst":0.18},{"id":88,"code":"SKU0088","desc":"Ciifrol Sport 4T 20W 40- Red - 0.9 LTR","brand":"Ciifrol","grade":2,"pack":6,"hsn":27101980,"gst":0.18},{"id":89,"code":"SKU0089","desc":"Ciifrol Sport 4T 20W 40- Red - 1 LTR","brand":"Ciifrol","grade":2,"pack":7,"hsn":27101980,"gst":0.18},{"id":90,"code":"SKU0090","desc":"Ciifrol Sport 4T 20W 40- Red - 50 LTR","brand":"Ciifrol","grade":2,"pack":18,"hsn":27101980,"gst":0.18},{"id":91,"code":"SKU0091","desc":"Ciifrol Bull 4T - 2.5 LTR","brand":"Ciifrol","grade":11,"pack":8,"hsn":27101980,"gst":0.18},{"id":92,"code":"SKU0092","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 0.5 LTR","brand":"Ciifrol","grade":12,"pack":4,"hsn":27101980,"gst":0.18},{"id":93,"code":"SKU0093","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 1 LTR","brand":"Ciifrol","grade":12,"pack":7,"hsn":27101980,"gst":0.18},{"id":94,"code":"SKU0094","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 5 LTR","brand":"Ciifrol","grade":12,"pack":11,"hsn":27101980,"gst":0.18},{"id":95,"code":"SKU0095","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 5 LTRB","brand":"Ciifrol","grade":12,"pack":12,"hsn":27101980,"gst":0.18},{"id":96,"code":"SKU0096","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 7.5 LTR","brand":"Ciifrol","grade":12,"pack":13,"hsn":27101980,"gst":0.18},{"id":97,"code":"SKU0097","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 8.5 LTR","brand":"Ciifrol","grade":12,"pack":14,"hsn":27101980,"gst":0.18},{"id":98,"code":"SKU0098","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 10 LTR","brand":"Ciifrol","grade":12,"pack":15,"hsn":27101980,"gst":0.18},{"id":99,"code":"SKU0099","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 20 LTR","brand":"Ciifrol","grade":12,"pack":16,"hsn":27101980,"gst":0.18},{"id":100,"code":"SKU0100","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 50 LTR","brand":"Ciifrol","grade":12,"pack":18,"hsn":27101980,"gst":0.18},{"id":101,"code":"SKU0101","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 0.5 LTR","brand":"Ciifrol","grade":13,"pack":4,"hsn":27101980,"gst":0.18},{"id":102,"code":"SKU0102","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 1 LTR","brand":"Ciifrol","grade":13,"pack":7,"hsn":27101980,"gst":0.18},{"id":103,"code":"SKU0103","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 5 LTR","brand":"Ciifrol","grade":13,"pack":11,"hsn":27101980,"gst":0.18},{"id":104,"code":"SKU0104","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 5 LTRB","brand":"Ciifrol","grade":13,"pack":12,"hsn":27101980,"gst":0.18},{"id":105,"code":"SKU0105","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 7.5 LTR","brand":"Ciifrol","grade":13,"pack":13,"hsn":27101980,"gst":0.18},{"id":106,"code":"SKU0106","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 8.5 LTR","brand":"Ciifrol","grade":13,"pack":14,"hsn":27101980,"gst":0.18},{"id":107,"code":"SKU0107","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 10 LTR","brand":"Ciifrol","grade":13,"pack":15,"hsn":27101980,"gst":0.18},{"id":108,"code":"SKU0108","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 20 LTR","brand":"Ciifrol","grade":13,"pack":16,"hsn":27101980,"gst":0.18},{"id":109,"code":"SKU0109","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 50 LTR","brand":"Ciifrol","grade":13,"pack":18,"hsn":27101980,"gst":0.18},{"id":110,"code":"SKU0110","desc":"Ciifrol Euro Star 15W 40 -CH4+   - 0.5 LTR","brand":"Ciifrol","grade":3,"pack":4,"hsn":27101980,"gst":0.18},{"id":111,"code":"SKU0111","desc":"Ciifrol Euro Star 15W 40 -CH4+   - 1 LTR","brand":"Ciifrol","grade":3,"pack":7,"hsn":27101980,"gst":0.18},{"id":112,"code":"SKU0112","desc":"Ciifrol Euro Star 15W 40 -CH4+   3 LTR","brand":"Ciifrol","grade":3,"pack":9,"hsn":27101980,"gst":0.18},{"id":113,"code":"SKU0113","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 0.5 LTR","brand":"Ciifrol","grade":3,"pack":4,"hsn":27101980,"gst":0.18},{"id":114,"code":"SKU0114","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 1 LTR","brand":"Ciifrol","grade":3,"pack":7,"hsn":27101980,"gst":0.18},{"id":115,"code":"SKU0115","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 5 LTR","brand":"Ciifrol","grade":3,"pack":11,"hsn":27101980,"gst":0.18},{"id":116,"code":"SKU0116","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 5 LTRB","brand":"Ciifrol","grade":3,"pack":12,"hsn":27101980,"gst":0.18},{"id":117,"code":"SKU0117","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 7.5 LTR","brand":"Ciifrol","grade":3,"pack":13,"hsn":27101980,"gst":0.18},{"id":118,"code":"SKU0118","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 8.5 LTR","brand":"Ciifrol","grade":3,"pack":14,"hsn":27101980,"gst":0.18},{"id":119,"code":"SKU0119","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 10 LTR","brand":"Ciifrol","grade":3,"pack":15,"hsn":27101980,"gst":0.18},{"id":120,"code":"SKU0120","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 20 LTR","brand":"Ciifrol","grade":3,"pack":16,"hsn":27101980,"gst":0.18},{"id":121,"code":"SKU0121","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 50 LTR","brand":"Ciifrol","grade":3,"pack":18,"hsn":27101980,"gst":0.18},{"id":122,"code":"SKU0122","desc":"Ciifrol Gear Oil 80W 90 - 0.5 LTR","brand":"Ciifrol","grade":4,"pack":4,"hsn":27101980,"gst":0.18},{"id":123,"code":"SKU0123","desc":"Ciifrol Gear Oil 80W 90 - 1 LTR","brand":"Ciifrol","grade":4,"pack":7,"hsn":27101980,"gst":0.18},{"id":124,"code":"SKU0124","desc":"Ciifrol Gear Oil 80W 90 - 2.5 LTR","brand":"Ciifrol","grade":4,"pack":8,"hsn":27101980,"gst":0.18},{"id":125,"code":"SKU0125","desc":"Ciifrol Gear Oil 80W 90 - 5 LTR","brand":"Ciifrol","grade":4,"pack":11,"hsn":27101980,"gst":0.18},{"id":126,"code":"SKU0126","desc":"Ciifrol Gear Oil 80W 90 - 5 LTRB","brand":"Ciifrol","grade":4,"pack":12,"hsn":27101980,"gst":0.18},{"id":127,"code":"SKU0127","desc":"Ciifrol Gear Oil 80W 90 - 20 LTR","brand":"Ciifrol","grade":4,"pack":16,"hsn":27101980,"gst":0.18},{"id":128,"code":"SKU0128","desc":"Ciifrol Gear Oil 80W 90 - 50 LTR","brand":"Ciifrol","grade":4,"pack":18,"hsn":27101980,"gst":0.18},{"id":129,"code":"SKU0129","desc":"Ciifrol Gear Oil 90 - 0.5 LTR","brand":"Ciifrol","grade":4,"pack":4,"hsn":27101980,"gst":0.18},{"id":130,"code":"SKU0130","desc":"Ciifrol Gear Oil 90 - 1 LTR","brand":"Ciifrol","grade":4,"pack":7,"hsn":27101980,"gst":0.18},{"id":131,"code":"SKU0131","desc":"Ciifrol Gear Oil 90 - 2.5 LTR","brand":"Ciifrol","grade":4,"pack":8,"hsn":27101980,"gst":0.18},{"id":132,"code":"SKU0132","desc":"Ciifrol Gear Oil 90 - 5 LTR","brand":"Ciifrol","grade":4,"pack":11,"hsn":27101980,"gst":0.18},{"id":133,"code":"SKU0133","desc":"Ciifrol Gear Oil 90 - 5 LTRB","brand":"Ciifrol","grade":4,"pack":12,"hsn":27101980,"gst":0.18},{"id":134,"code":"SKU0134","desc":"Ciifrol Gear Oil 90 - 20 LTR","brand":"Ciifrol","grade":4,"pack":16,"hsn":27101980,"gst":0.18},{"id":135,"code":"SKU0135","desc":"Ciifrol Gear Oil 90 - 50 LTR","brand":"Ciifrol","grade":4,"pack":18,"hsn":27101980,"gst":0.18},{"id":136,"code":"SKU0136","desc":"Ciifrol Gear Oil 140 - 0.5 LTR","brand":"Ciifrol","grade":5,"pack":4,"hsn":27101980,"gst":0.18},{"id":137,"code":"SKU0137","desc":"Ciifrol Gear Oil 140 - 1 LTR","brand":"Ciifrol","grade":5,"pack":7,"hsn":27101980,"gst":0.18},{"id":138,"code":"SKU0138","desc":"Ciifrol Gear Oil 140 - 2.5 LTR","brand":"Ciifrol","grade":5,"pack":8,"hsn":27101980,"gst":0.18},{"id":139,"code":"SKU0139","desc":"Ciifrol Gear Oil 140 - 5 LTR","brand":"Ciifrol","grade":5,"pack":11,"hsn":27101980,"gst":0.18},{"id":140,"code":"SKU0140","desc":"Ciifrol Gear Oil 140 - 5 LTRB","brand":"Ciifrol","grade":5,"pack":12,"hsn":27101980,"gst":0.18},{"id":141,"code":"SKU0141","desc":"Ciifrol Gear Oil 140 - 20 LTR","brand":"Ciifrol","grade":5,"pack":16,"hsn":27101980,"gst":0.18},{"id":142,"code":"SKU0142","desc":"Ciifrol Gear Oil 140 - 50 LTR","brand":"Ciifrol","grade":5,"pack":18,"hsn":27101980,"gst":0.18},{"id":143,"code":"SKU0143","desc":"Ciifrol Gear Oil 85W 140 - 0.5 LTR","brand":"Ciifrol","grade":5,"pack":4,"hsn":27101980,"gst":0.18},{"id":144,"code":"SKU0144","desc":"Ciifrol Gear Oil 85W 140 - 1 LTR","brand":"Ciifrol","grade":6,"pack":7,"hsn":27101980,"gst":0.18},{"id":145,"code":"SKU0145","desc":"Ciifrol Gear Oil 85W 140 - 2.5 LTR","brand":"Ciifrol","grade":6,"pack":8,"hsn":27101980,"gst":0.18},{"id":146,"code":"SKU0146","desc":"Ciifrol Gear Oil 85W 140 - 5 LTR","brand":"Ciifrol","grade":6,"pack":11,"hsn":27101980,"gst":0.18},{"id":147,"code":"SKU0147","desc":"Ciifrol Gear Oil 85W 140 - 5 LTRB","brand":"Ciifrol","grade":6,"pack":12,"hsn":27101980,"gst":0.18},{"id":148,"code":"SKU0148","desc":"Ciifrol Gear Oil 85W 140 - 20 LTR","brand":"Ciifrol","grade":6,"pack":16,"hsn":27101980,"gst":0.18},{"id":149,"code":"SKU0149","desc":"Ciifrol Gear Oil 85W 140 - 50 LTR","brand":"Ciifrol","grade":6,"pack":18,"hsn":27101980,"gst":0.18},{"id":150,"code":"SKU0150","desc":"Ciifrol Wetbrake Oil - 5 LTR","brand":"Ciifrol","grade":7,"pack":11,"hsn":27101980,"gst":0.18},{"id":151,"code":"SKU0151","desc":"Ciifrol Wetbrake Oil - 5 LTRB","brand":"Ciifrol","grade":7,"pack":12,"hsn":27101980,"gst":0.18},{"id":152,"code":"SKU0152","desc":"Ciifrol Wetbrake Oil - 20 LTR","brand":"Ciifrol","grade":7,"pack":16,"hsn":27101980,"gst":0.18},{"id":153,"code":"SKU0153","desc":"Ciifrol Wetbrake Oil - 40 LTR","brand":"Ciifrol","grade":7,"pack":17,"hsn":27101980,"gst":0.18},{"id":154,"code":"SKU0154","desc":"Ciifrol TQA - Red - 0.5 LTR","brand":"Ciifrol","grade":9,"pack":4,"hsn":27101980,"gst":0.18},{"id":155,"code":"SKU0155","desc":"Ciifrol TQA - Red - 1 LTR","brand":"Ciifrol","grade":9,"pack":7,"hsn":27101980,"gst":0.18},{"id":156,"code":"SKU0156","desc":"Ciifrol TQA - Red - 5 LTR","brand":"Ciifrol","grade":9,"pack":11,"hsn":27101980,"gst":0.18},{"id":157,"code":"SKU0157","desc":"Ciifrol TQA - Red - 5 LTRB","brand":"Ciifrol","grade":9,"pack":12,"hsn":27101980,"gst":0.18},{"id":158,"code":"SKU0158","desc":"Ciifrol TQA - Red - 20 LTR","brand":"Ciifrol","grade":9,"pack":16,"hsn":27101980,"gst":0.18},{"id":159,"code":"SKU0159","desc":"Ciifrol TQA - Red - 50 LTR","brand":"Ciifrol","grade":9,"pack":18,"hsn":27101980,"gst":0.18},{"id":160,"code":"SKU0160","desc":"Ciifrol Glycool - 1 LTR","brand":"Ciifrol","grade":8,"pack":7,"hsn":27101980,"gst":0.18},{"id":161,"code":"SKU0161","desc":"Ciifrol Euro3 Sc - 7.5 LTR","brand":"Ciifrol","grade":12,"pack":13,"hsn":27101980,"gst":0.18},{"id":162,"code":"SKU0162","desc":"Ciifrol EuroDiesel Sc - 7.5 LTR","brand":"Ciifrol","grade":13,"pack":13,"hsn":27101980,"gst":0.18},{"id":163,"code":"SKU0163","desc":"Ciifrol EuroDiesel Sc - 10 LTR","brand":"Ciifrol","grade":13,"pack":15,"hsn":27101980,"gst":0.18},{"id":164,"code":"SKU0164","desc":"Ciifrol Bull 4T - 2.5 LTR","brand":"Ciifrol","grade":11,"pack":8,"hsn":27101980,"gst":0.18},{"id":165,"code":"SKU0165","desc":"Ciifrol Sport 4T 20W 40- Red - 210 LTR","brand":"Ciifrol","grade":2,"pack":19,"hsn":27101980,"gst":0.18},{"id":166,"code":"SKU0166","desc":"Ciifrol Euro3 20W 40 -CF4+ - Red - 210 LTR","brand":"Ciifrol","grade":12,"pack":19,"hsn":27101980,"gst":0.18},{"id":167,"code":"SKU0167","desc":"Ciifrol Euro Diesel 15W 40 -CF4+   - 210 LTR","brand":"Ciifrol","grade":13,"pack":19,"hsn":27101980,"gst":0.18},{"id":168,"code":"SKU0168","desc":"Ciifrol Euro Gold 15W 40 -CI4+   - 210 LTR","brand":"Ciifrol","grade":3,"pack":19,"hsn":27101980,"gst":0.18},{"id":169,"code":"SKU0169","desc":"Ciifrol Gear Oil 80W 90 - 210 LTR","brand":"Ciifrol","grade":4,"pack":19,"hsn":27101980,"gst":0.18},{"id":170,"code":"SKU0170","desc":"Ciifrol Gear Oil 90 - 210 LTR","brand":"Ciifrol","grade":4,"pack":19,"hsn":27101980,"gst":0.18},{"id":171,"code":"SKU0171","desc":"Ciifrol Gear Oil 140 - 210 LTR","brand":"Ciifrol","grade":5,"pack":19,"hsn":27101980,"gst":0.18},{"id":172,"code":"SKU0172","desc":"Ciifrol Gear Oil 85W 140 - 210 LTR","brand":"Ciifrol","grade":6,"pack":19,"hsn":27101980,"gst":0.18},{"id":173,"code":"SKU0173","desc":"Ciifrol Wetbrake Oil - 210 LTR","brand":"Ciifrol","grade":7,"pack":19,"hsn":27101980,"gst":0.18},{"id":174,"code":"SKU0174","desc":"Ciifrol TQA - Red - 210 LTR","brand":"Ciifrol","grade":9,"pack":19,"hsn":27101980,"gst":0.18},{"id":175,"code":"SKU0175","desc":"Gobyk Speed 4T 20W 40 - Golden - 50 LTR","brand":"Gobyk","grade":1,"pack":18,"hsn":27101980,"gst":0.18},{"id":176,"code":"SKU0176","desc":"Camp Hydrex TH 46 - 50 LTR","brand":"Camp","grade":14,"pack":18,"hsn":27101980,"gst":0.18},{"id":177,"code":"SKU0177","desc":"Camp Hydrex TH 46 - 210 LTR","brand":"Camp","grade":14,"pack":19,"hsn":27101980,"gst":0.18},{"id":178,"code":"SKU0178","desc":"Camp Hydrex HLP 68 - 50 LTR","brand":"Camp","grade":15,"pack":18,"hsn":27101980,"gst":0.18},{"id":179,"code":"SKU0179","desc":"Camp Hydrex HLP 68 - 210 LTR","brand":"Camp","grade":15,"pack":19,"hsn":27101980,"gst":0.18},{"id":180,"code":"SKU0180","desc":"Camp Rider 4T 20W 40 - Golden - 0.5 LTR","brand":"Camp","grade":1,"pack":4,"hsn":27101980,"gst":0.18},{"id":181,"code":"SKU0181","desc":"Camp Rider 4T 20W 40 - Golden - 2.5 LTR","brand":"Camp","grade":1,"pack":8,"hsn":27101980,"gst":0.18},{"id":182,"code":"SKU0182","desc":"Camp Rider 4T 20W 40 - Golden - 3 LTR","brand":"Camp","grade":1,"pack":9,"hsn":27101980,"gst":0.18},{"id":183,"code":"SKU0183","desc":"Camp Rider 4T 20W 40 - Golden - 3.5 LTR","brand":"Camp","grade":1,"pack":10,"hsn":27101980,"gst":0.18},{"id":184,"code":"SKU0184","desc":"Camp Rider 4T 20W 40 - Golden - 5 LTR","brand":"Camp","grade":1,"pack":11,"hsn":27101980,"gst":0.18},{"id":185,"code":"SKU0185","desc":"Camp Rider 4T 20W 40 - Golden - 5 LTRB","brand":"Camp","grade":1,"pack":12,"hsn":27101980,"gst":0.18},{"id":186,"code":"SKU0186","desc":"Camp Rider 4T 20W 40 - Golden - 7.5 LTR","brand":"Camp","grade":1,"pack":13,"hsn":27101980,"gst":0.18},{"id":187,"code":"SKU0187","desc":"Camp Rider 4T 20W 40 - Golden - 8.5 LTR","brand":"Camp","grade":1,"pack":14,"hsn":27101980,"gst":0.18},{"id":188,"code":"SKU0188","desc":"Camp Rider 4T 20W 40 - Golden - 10 LTR","brand":"Camp","grade":1,"pack":15,"hsn":27101980,"gst":0.18},{"id":189,"code":"SKU0189","desc":"Camp Top-1 20W 40- Red - 0.5 LTR","brand":"Camp","grade":2,"pack":4,"hsn":27101980,"gst":0.18},{"id":190,"code":"SKU0190","desc":"Camp Top-1 20W 40- Red - 2.5 LTR","brand":"Camp","grade":2,"pack":8,"hsn":27101980,"gst":0.18},{"id":191,"code":"SKU0191","desc":"Camp Top-1 20W 40- Red - 3 LTR","brand":"Camp","grade":2,"pack":9,"hsn":27101980,"gst":0.18},{"id":192,"code":"SKU0192","desc":"Camp Top-1 20W 40- Red - 3.5 LTR","brand":"Camp","grade":2,"pack":10,"hsn":27101980,"gst":0.18},{"id":193,"code":"SKU0193","desc":"Camp Top-1 20W 40- Red - 5 LTR","brand":"Camp","grade":2,"pack":11,"hsn":27101980,"gst":0.18},{"id":194,"code":"SKU0194","desc":"Camp Top-1 20W 40- Red - 5 LTRB","brand":"Camp","grade":2,"pack":12,"hsn":27101980,"gst":0.18},{"id":195,"code":"SKU0195","desc":"Camp Top-1 20W 40- Red - 7.5 LTR","brand":"Camp","grade":2,"pack":13,"hsn":27101980,"gst":0.18},{"id":196,"code":"SKU0196","desc":"Camp Top-1 20W 40- Red - 8.5 LTR","brand":"Camp","grade":2,"pack":14,"hsn":27101980,"gst":0.18},{"id":197,"code":"SKU0197","desc":"Camp Top-1 20W 40- Red - 10 LTR","brand":"Camp","grade":2,"pack":15,"hsn":27101980,"gst":0.18},{"id":198,"code":"SKU0198","desc":"Camp Top-1 20W 40- Red - 20 LTR","brand":"Camp","grade":2,"pack":16,"hsn":27101980,"gst":0.18},{"id":199,"code":"SKU0199","desc":"Camp Tito 20W 40 -CH4+ - Golden - 0.9 LTR","brand":"Camp","grade":3,"pack":6,"hsn":27101980,"gst":0.18},{"id":200,"code":"SKU0200","desc":"Camp Tito 20W 40 -CH4+ - Golden - 1 LTR","brand":"Camp","grade":3,"pack":7,"hsn":27101980,"gst":0.18},{"id":201,"code":"SKU0201","desc":"Camp Tito 20W 40 -CH4+ - Golden - 2.5 LTR","brand":"Camp","grade":3,"pack":8,"hsn":27101980,"gst":0.18},{"id":202,"code":"SKU0202","desc":"Camp Tito 20W 40 -CH4+ - Golden - 3 LTR","brand":"Camp","grade":3,"pack":9,"hsn":27101980,"gst":0.18},{"id":203,"code":"SKU0203","desc":"Camp Tito 20W 40 -CH4+ - Golden - 3.5 LTR","brand":"Camp","grade":3,"pack":10,"hsn":27101980,"gst":0.18},{"id":204,"code":"SKU0204","desc":"Camp Tito 20W 40 -CH4+ - Golden - 5 LTR","brand":"Camp","grade":3,"pack":11,"hsn":27101980,"gst":0.18},{"id":205,"code":"SKU0205","desc":"Camp Tito 20W 40 -CH4+ - Golden - 5 LTRB","brand":"Camp","grade":3,"pack":12,"hsn":27101980,"gst":0.18},{"id":206,"code":"SKU0206","desc":"Camp Tito 20W 40 -CH4+ - Golden - 7.5 LTR","brand":"Camp","grade":3,"pack":13,"hsn":27101980,"gst":0.18},{"id":207,"code":"SKU0207","desc":"Camp Tito 20W 40 -CH4+ - Golden - 8.5 LTR","brand":"Camp","grade":3,"pack":14,"hsn":27101980,"gst":0.18},{"id":208,"code":"SKU0208","desc":"Camp Tito 20W 40 -CH4+ - Golden - 10 LTR","brand":"Camp","grade":3,"pack":15,"hsn":27101980,"gst":0.18},{"id":209,"code":"SKU0209","desc":"Camp Tito 20W 40 -CH4+ - Golden - 20 LTR","brand":"Camp","grade":3,"pack":16,"hsn":27101980,"gst":0.18},{"id":210,"code":"SKU0210","desc":"Camp Tito 20W 40 -CH4+ - Golden - 50 LTR","brand":"Camp","grade":3,"pack":18,"hsn":27101980,"gst":0.18},{"id":211,"code":"SKU0211","desc":"Camp Tito 20W 40 -CH4+ - Golden - 210 LTR","brand":"Camp","grade":3,"pack":19,"hsn":27101980,"gst":0.18},{"id":212,"code":"SKU0212","desc":"Camp Super 20W 40 -CH4+ - Golden - 0.5 LTR","brand":"Camp","grade":3,"pack":4,"hsn":27101980,"gst":0.18},{"id":213,"code":"SKU0213","desc":"Camp Super 20W 40 -CH4+ - Golden - 3.5 LTR","brand":"Camp","grade":3,"pack":10,"hsn":27101980,"gst":0.18},{"id":214,"code":"SKU0214","desc":"Camp Wetclutch Oil - 40 LTR","brand":"Camp","grade":7,"pack":17,"hsn":27101980,"gst":0.18},{"id":215,"code":"SKU0215","desc":"Camp Coolex Green - 0.5 LTR","brand":"Camp","grade":8,"pack":4,"hsn":27101980,"gst":0.18},{"id":216,"code":"SKU0216","desc":"Camp Coolex Green - 5 LTR","brand":"Camp","grade":8,"pack":11,"hsn":27101980,"gst":0.18},{"id":217,"code":"SKU0217","desc":"Camp Coolex Green - 20 LTR","brand":"Camp","grade":8,"pack":16,"hsn":27101980,"gst":0.18},{"id":218,"code":"SKU0218","desc":"Camp Coolex Green - 50 LTR","brand":"Camp","grade":8,"pack":18,"hsn":27101980,"gst":0.18},{"id":219,"code":"SKU0219","desc":"Camp Coolex Green - 210 LTR","brand":"Camp","grade":8,"pack":19,"hsn":27101980,"gst":0.18},{"id":220,"code":"SKU0220","desc":"Ciifrol Sport 4T 20W 40- Red - 0.5 LTR","brand":"Ciifrol","grade":2,"pack":4,"hsn":27101980,"gst":0.18},{"id":221,"code":"SKU0221","desc":"Ciifrol Sport 4T 20W 40- Red - 2.5 LTR","brand":"Ciifrol","grade":2,"pack":8,"hsn":27101980,"gst":0.18},{"id":222,"code":"SKU0222","desc":"Ciifrol Sport 4T 20W 40- Red - 3 LTR","brand":"Ciifrol","grade":2,"pack":9,"hsn":27101980,"gst":0.18},{"id":223,"code":"SKU0223","desc":"Ciifrol Sport 4T 20W 40- Red - 3.5 LTR","brand":"Ciifrol","grade":2,"pack":10,"hsn":27101980,"gst":0.18},{"id":224,"code":"SKU0224","desc":"Ciifrol Sport 4T 20W 40- Red - 5 LTR","brand":"Ciifrol","grade":2,"pack":11,"hsn":27101980,"gst":0.18},{"id":225,"code":"SKU0225","desc":"Ciifrol Sport 4T 20W 40- Red - 5 LTRB","brand":"Ciifrol","grade":2,"pack":12,"hsn":27101980,"gst":0.18},{"id":226,"code":"SKU0226","desc":"Ciifrol Sport 4T 20W 40- Red - 7.5 LTR","brand":"Ciifrol","grade":2,"pack":13,"hsn":27101980,"gst":0.18},{"id":227,"code":"SKU0227","desc":"Ciifrol Sport 4T 20W 40- Red - 8.5 LTR","brand":"Ciifrol","grade":2,"pack":14,"hsn":27101980,"gst":0.18},{"id":228,"code":"SKU0228","desc":"Ciifrol Sport 4T 20W 40- Red - 10 LTR","brand":"Ciifrol","grade":2,"pack":15,"hsn":27101980,"gst":0.18},{"id":229,"code":"SKU0229","desc":"Ciifrol Sport 4T 20W 40- Red - 20 LTR","brand":"Ciifrol","grade":2,"pack":16,"hsn":27101980,"gst":0.18},{"id":230,"code":"SKU0230","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 2.5 LTR","brand":"Ciifrol","grade":12,"pack":8,"hsn":27101980,"gst":0.18},{"id":231,"code":"SKU0231","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 3 LTR","brand":"Ciifrol","grade":12,"pack":9,"hsn":27101980,"gst":0.18},{"id":232,"code":"SKU0232","desc":"Ciifrol Euro-3 20W 40 -CF4+ - Red - 3.5 LTR","brand":"Ciifrol","grade":12,"pack":10,"hsn":27101980,"gst":0.18},{"id":233,"code":"SKU0233","desc":"Ciifrol Euro Diesel 15W 40 -CF4+ - 2.5 LTR","brand":"Ciifrol","grade":13,"pack":8,"hsn":27101980,"gst":0.18},{"id":234,"code":"SKU0234","desc":"Ciifrol Euro Diesel 15W 40 -CF4+ - 3 LTR","brand":"Ciifrol","grade":13,"pack":9,"hsn":27101980,"gst":0.18},{"id":235,"code":"SKU0235","desc":"Ciifrol Euro Diesel 15W 40 -CF4+ - 3.5 LTR","brand":"Ciifrol","grade":13,"pack":10,"hsn":27101980,"gst":0.18},{"id":236,"code":"SKU0236","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 2.5 LTR","brand":"Ciifrol","grade":3,"pack":8,"hsn":27101980,"gst":0.18},{"id":237,"code":"SKU0237","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 3.5 LTR","brand":"Ciifrol","grade":3,"pack":10,"hsn":27101980,"gst":0.18},{"id":238,"code":"SKU0238","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 5 LTR","brand":"Ciifrol","grade":3,"pack":11,"hsn":27101980,"gst":0.18},{"id":239,"code":"SKU0239","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 5 LTRB","brand":"Ciifrol","grade":3,"pack":12,"hsn":27101980,"gst":0.18},{"id":240,"code":"SKU0240","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 7.5 LTR","brand":"Ciifrol","grade":3,"pack":13,"hsn":27101980,"gst":0.18},{"id":241,"code":"SKU0241","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 8.5 LTR","brand":"Ciifrol","grade":3,"pack":14,"hsn":27101980,"gst":0.18},{"id":242,"code":"SKU0242","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 10 LTR","brand":"Ciifrol","grade":3,"pack":15,"hsn":27101980,"gst":0.18},{"id":243,"code":"SKU0243","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 20 LTR","brand":"Ciifrol","grade":3,"pack":16,"hsn":27101980,"gst":0.18},{"id":244,"code":"SKU0244","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 50 LTR","brand":"Ciifrol","grade":3,"pack":18,"hsn":27101980,"gst":0.18},{"id":245,"code":"SKU0245","desc":"Ciifrol Euro Star 15W 40 -CH4+ - 210 LTR","brand":"Ciifrol","grade":3,"pack":19,"hsn":27101980,"gst":0.18},{"id":246,"code":"SKU0246","desc":"Ciifrol Euro Gold 15W 40 -CI4+ - 2.5 LTR","brand":"Ciifrol","grade":3,"pack":8,"hsn":27101980,"gst":0.18},{"id":247,"code":"SKU0247","desc":"Ciifrol Euro Gold 15W 40 -CI4+ - 3 LTR","brand":"Ciifrol","grade":3,"pack":9,"hsn":27101980,"gst":0.18},{"id":248,"code":"SKU0248","desc":"Ciifrol Euro Gold 15W 40 -CI4+ - 3.5 LTR","brand":"Ciifrol","grade":3,"pack":10,"hsn":27101980,"gst":0.18},{"id":249,"code":"SKU0249","desc":"Ciifrol Wetbrake Oil - 50 LTR","brand":"Ciifrol","grade":7,"pack":18,"hsn":27101980,"gst":0.18},{"id":250,"code":"SKU0250","desc":"Ciifrol Glycool - 0.5 LTR","brand":"Ciifrol","grade":8,"pack":4,"hsn":27101980,"gst":0.18},{"id":251,"code":"SKU0251","desc":"Ciifrol Glycool - 5 LTR","brand":"Ciifrol","grade":8,"pack":11,"hsn":27101980,"gst":0.18},{"id":252,"code":"SKU0252","desc":"Ciifrol Glycool - 20 LTR","brand":"Ciifrol","grade":8,"pack":16,"hsn":27101980,"gst":0.18},{"id":253,"code":"SKU0253","desc":"Ciifrol Glycool - 50 LTR","brand":"Ciifrol","grade":8,"pack":18,"hsn":27101980,"gst":0.18},{"id":254,"code":"SKU0254","desc":"Ciifrol Glycool - 210 LTR","brand":"Ciifrol","grade":8,"pack":19,"hsn":27101980,"gst":0.18}]};</script>
+<script>(function(){
+// Minimal XLSX writer (stored/deflate-free zip). Shared by node tests and the browser app.
+function crc32(buf) {
+  let c, crc = 0xFFFFFFFF;
+  for (let i = 0; i < buf.length; i++) {
+    c = (crc ^ buf[i]) & 0xFF;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+    crc = (crc >>> 8) ^ c;
+  }
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function u16(n){return [n&255,(n>>8)&255];}
+function u32(n){return [n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];}
+function strBytes(s){return new TextEncoder().encode(s);}
+
+function zipStore(files){ // files: [{name, data:Uint8Array}]
+  const chunks=[]; const central=[]; let offset=0;
+  for(const f of files){
+    const nameB=strBytes(f.name); const crc=crc32(f.data); const size=f.data.length;
+    const local=[...u32(0x04034b50),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),
+      ...u32(crc),...u32(size),...u32(size),...u16(nameB.length),...u16(0)];
+    const head=new Uint8Array(local);
+    chunks.push(head,nameB,f.data);
+    central.push({nameB,crc,size,offset});
+    offset += head.length+nameB.length+size;
+  }
+  const cdStart=offset; const cdChunks=[];
+  for(const c of central){
+    const rec=[...u32(0x02014b50),...u16(20),...u16(20),...u16(0),...u16(0),...u16(0),...u16(0),
+      ...u32(c.crc),...u32(c.size),...u32(c.size),...u16(c.nameB.length),...u16(0),...u16(0),
+      ...u16(0),...u16(0),...u32(0),...u32(c.offset)];
+    const b=new Uint8Array(rec); cdChunks.push(b,c.nameB);
+    offset += b.length+c.nameB.length;
+  }
+  const cdSize=offset-cdStart;
+  const end=[...u32(0x06054b50),...u16(0),...u16(0),...u16(central.length),...u16(central.length),
+    ...u32(cdSize),...u32(cdStart),...u16(0)];
+  const all=[...chunks,...cdChunks,new Uint8Array(end)];
+  const total=all.reduce((a,b)=>a+b.length,0);
+  const out=new Uint8Array(total); let p=0;
+  for(const a of all){out.set(a,p);p+=a.length;}
+  return out;
+}
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function colName(i){let s='';i++;while(i>0){const m=(i-1)%26;s=String.fromCharCode(65+m)+s;i=Math.floor((i-1)/26);}return s;}
+
+function sheetXml(rows, hidden){
+  const hid = hidden || [];
+  let cols='<cols><col min="1" max="1" width="34" customWidth="1"/><col min="2" max="2" width="14" customWidth="1"/>'+
+    '<col min="3" max="3" width="13" customWidth="1"/><col min="4" max="4" width="16" customWidth="1"/>'+
+    '<col min="5" max="5" width="10" customWidth="1"/><col min="6" max="9" width="15" customWidth="1"/>';
+  hid.forEach(c=>{ cols+='<col min="'+c+'" max="'+c+'" hidden="1" width="9" customWidth="1"/>'; });
+  cols+='</cols>';
+  let x='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'+
+    cols+'<sheetData>';
+  rows.forEach((row,ri)=>{
+    x+='<row r="'+(ri+1)+'">';
+    row.forEach((v,ci)=>{
+      const ref=colName(ci)+(ri+1);
+      if(v===null||v===undefined||v==='') return;
+      if(v&&typeof v==='object'&&v.f){
+        x+='<c r="'+ref+'"><f>'+esc(String(v.f).replace(/^=/,''))+'</f></c>';
+      } else if(typeof v==='number'&&isFinite(v)){
+        x+='<c r="'+ref+'"><v>'+v+'</v></c>';
+      } else {
+        x+='<c r="'+ref+'" t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+      }
+    });
+    x+='</row>';
+  });
+  return x+'</sheetData></worksheet>';
+}
+
+function buildXlsx(sheets){
+  const files=[];
+  const ct='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>'+
+    sheets.map((s,i)=>'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>').join('')+
+    '</Types>';
+  const rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>';
+  const wb='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'+
+    sheets.map((s,i)=>'<sheet name="'+esc(s.name).slice(0,31)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>').join('')+
+    '</sheets></workbook>';
+  const wbRels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    sheets.map((s,i)=>'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>').join('')+
+    '</Relationships>';
+  files.push({name:'[Content_Types].xml',data:strBytes(ct)});
+  files.push({name:'_rels/.rels',data:strBytes(rels)});
+  files.push({name:'xl/workbook.xml',data:strBytes(wb)});
+  files.push({name:'xl/_rels/workbook.xml.rels',data:strBytes(wbRels)});
+  sheets.forEach((s,i)=>files.push({name:'xl/worksheets/sheet'+(i+1)+'.xml',data:strBytes(sheetXml(s.rows, s.hiddenCols))}));
+  return zipStore(files);
+}
+
+
+
+window.buildXlsx = buildXlsx;
+})();</script>
+<script>(function(){
+// ---- Calculation engine: the twelve equations, in one place ----
+function mkEngine(DB){
+  const M = Object.fromEntries(DB.materials.map(m=>[m.id,m]));
+  const G = Object.fromEntries(DB.grades.map(g=>[g.id,g]));
+  const P = Object.fromEntries(DB.packs.map(p=>[p.id,p]));
+
+  function matOf(m, ctx){
+    const o = (ctx.matOverride && ctx.matOverride[m.id]) || {};
+    return {
+      price: o.price != null ? o.price : ((ctx.matPrice && ctx.matPrice[m.id] != null) ? ctx.matPrice[m.id] : m.price),
+      density: o.density != null ? o.density : m.density,
+      transport: o.transport != null ? o.transport : m.transport,
+      basis: m.basis
+    };
+  }
+  function landed(m, ctx){
+    const x = matOf(m, ctx);
+    const perKg = x.basis === 'KG' ? x.price : x.price / (x.density || 1);
+    return perKg + (x.transport || 0);
+  }
+  function formulation(gid, ctx){
+    const g=G[gid];
+    let rows=g.form.map(([mid,pct])=>({mid,pct}));
+    if(ctx.formOverride && ctx.formOverride[gid]){
+      for(const ch of ctx.formOverride[gid]){
+        const r=rows.find(x=>x.mid===ch.mid);
+        if(r) r.pct=ch.pct; else rows.push({mid:ch.mid,pct:ch.pct});
+      }
+    }
+    return rows;
+  }
+  function gradeSettings(gid, ctx){
+    const g=G[gid];
+    const o=(ctx.gradeOverride&&ctx.gradeOverride[gid])||{};
+    return {
+      density: o.density!=null?o.density:g.density,
+      loss:    o.loss!=null?o.loss:g.loss,
+      conv:    o.conv!=null?o.conv:g.conv
+    };
+  }
+  function blend(gid, ctx){
+    const rows=formulation(gid,ctx);
+    let total=0, kg=0; const lines=[];
+    for(const r of rows){
+      const m=M[r.mid]; const x=matOf(m,ctx); const L=landed(m,ctx);
+      const contribution=r.pct*L;
+      total+=r.pct; kg+=contribution;
+      lines.push({mat:m,price:x.price,density:x.density,transport:x.transport,basis:x.basis,
+                  pct:r.pct,landed:L,contribution,share:0});
+    }
+    lines.forEach(l=>l.share = kg? l.contribution/kg : 0);
+    const s=gradeSettings(gid,ctx);
+    const rmL = kg*s.density;
+    const afterLoss = rmL*(1+s.loss);
+    return {lines,total,kg,rmL,afterLoss,conv:s.conv,bulk:afterLoss+s.conv,density:s.density,loss:s.loss};
+  }
+  function packCost(pid, ctx){
+    const p=P[pid]; const o=(ctx.packOverride&&ctx.packOverride[pid])||{};
+    const cp=o.cp!=null?o.cp:p.cp, capp=o.capp!=null?o.capp:p.capp,
+          lp=o.lp!=null?o.lp:p.lp, ctp=o.ctp!=null?o.ctp:p.ctp;
+    const total = p.cq*cp + p.capq*capp + p.lq*lp + p.ctq*ctp;
+    return {total, perLitre: total/p.lpc, litres:p.litres, lpc:p.lpc};
+  }
+  // margin resolution: most specific rule wins
+  const RANK={SKU:6,PRODUCT_PACK:5,PRODUCT:4,PACK:3,BRAND:2,GLOBAL:1};
+  function margin(type, sku, ctx){
+    const rules=(ctx.marginRules||[]).filter(r=>r.type===type);
+    let best=null;
+    for(const r of rules){
+      let ok=false;
+      if(r.scope==='GLOBAL') ok=true;
+      else if(r.scope==='BRAND') ok=(r.brand===sku.brand);
+      else if(r.scope==='PRODUCT') ok=(r.grade===sku.grade);
+      else if(r.scope==='PACK') ok=(r.pack===sku.pack);
+      else if(r.scope==='PRODUCT_PACK') ok=(r.grade===sku.grade && r.pack===sku.pack);
+      else if(r.scope==='SKU') ok=(r.sku===sku.id);
+      if(!ok) continue;
+      const score=RANK[r.scope]*1e6 + (r.seq||0);
+      if(!best || score>best.score) best={rule:r,score,value:r.value};
+    }
+    return best ? {value:best.value, rule:best.rule} : {value:0, rule:null};
+  }
+  function sku(skuId, ctx){
+    const s=DB.skus.find(x=>x.id===skuId);
+    const b=blend(s.grade,ctx);
+    const pk=packCost(s.pack,ctx);
+    const cost=b.bulk+pk.perLitre;
+    const up=margin('UPLABS',s,ctx);
+    const cp=margin('CAMP',s,ctx);
+    const upBasic=cost+up.value;
+    const upInv=upBasic*(1+s.gst);
+    const campBasic=upBasic+cp.value;
+    const campInv=campBasic*(1+s.gst);
+    const packPrice=campInv*pk.litres;
+    return {sku:s,blend:b,pack:pk,cost,upMargin:up.value,upRule:up.rule,cpMargin:cp.value,cpRule:cp.rule,
+            upBasic,upInv,campBasic,campInv,packPrice,mrp:mrpRound(packPrice,pk.litres)};
+  }
+  const BANDS=[[1,2.44],[8.5,2.38],[10,2.38],[50,1.5],[Infinity,1.15]];
+  function bandFor(litres){ for(const [lim,f] of BANDS) if(litres<=lim) return f; return 1.15; }
+  function mrpRound(price,litres){
+    const v=price*bandFor(litres);
+    const step = v<1000?5:100;
+    return Math.round(v/step)*step;
+  }
+  function all(ctx){ return DB.skus.map(s=>sku(s.id,ctx)); }
+  return {landed,matOf,formulation,gradeSettings,blend,packCost,margin,sku,all,bandFor};
+}
+
+
+window.mkEngine = mkEngine;
+})();</script>
+<script>/* Minimal .xlsx reader — no dependencies. Handles stored and deflated entries,
+   shared strings, inline strings and numbers. Uses the browser's DecompressionStream. */
+(function () {
+  async function inflateRaw(bytes) {
+    if (typeof DecompressionStream === 'undefined') throw new Error('This browser cannot read Excel files. Use Chrome or Edge.');
+    const source = new ReadableStream({ start(c) { c.enqueue(bytes); c.close(); } });
+    const reader = source.pipeThrough(new DecompressionStream('deflate-raw')).getReader();
+    const chunks = []; let total = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value); total += value.length;
+    }
+    const out = new Uint8Array(total); let p = 0;
+    for (const c of chunks) { out.set(c, p); p += c.length; }
+    return out;
+  }
+
+  function readEntries(buf) {
+    const dv = new DataView(buf), u8 = new Uint8Array(buf);
+    let eocd = -1;
+    const floor = Math.max(0, u8.length - 66000);
+    for (let i = u8.length - 22; i >= floor; i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error('This is not a valid .xlsx file.');
+    const count = dv.getUint16(eocd + 10, true);
+    const cdOff = dv.getUint32(eocd + 16, true);
+    const out = {};
+    let p = cdOff;
+    for (let i = 0; i < count; i++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      const method = dv.getUint16(p + 10, true);
+      const csize = dv.getUint32(p + 20, true);
+      const nameLen = dv.getUint16(p + 28, true);
+      const extraLen = dv.getUint16(p + 30, true);
+      const commentLen = dv.getUint16(p + 32, true);
+      const localOff = dv.getUint32(p + 42, true);
+      const name = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nameLen));
+      out[name] = { method, csize, localOff };
+      p += 46 + nameLen + extraLen + commentLen;
+    }
+    return { entries: out, dv, u8 };
+  }
+
+  async function readFile(buf) {
+    const { entries, dv, u8 } = readEntries(buf);
+    async function text(name) {
+      const e = entries[name];
+      if (!e) return null;
+      const nl = dv.getUint16(e.localOff + 26, true);
+      const el = dv.getUint16(e.localOff + 28, true);
+      const start = e.localOff + 30 + nl + el;
+      const raw = u8.subarray(start, start + e.csize);
+      const bytes = e.method === 0 ? raw : await inflateRaw(raw);
+      return new TextDecoder().decode(bytes);
+    }
+    const parser = new DOMParser();
+    const wbXml = await text('xl/workbook.xml');
+    if (!wbXml) throw new Error('No workbook found inside the file.');
+    const wbDoc = parser.parseFromString(wbXml, 'application/xml');
+    const relsXml = await text('xl/_rels/workbook.xml.rels');
+    const rels = {};
+    if (relsXml) {
+      const rd = parser.parseFromString(relsXml, 'application/xml');
+      rd.querySelectorAll('Relationship').forEach(r => { rels[r.getAttribute('Id')] = r.getAttribute('Target'); });
+    }
+    let shared = [];
+    const ssXml = await text('xl/sharedStrings.xml');
+    if (ssXml) {
+      const sd = parser.parseFromString(ssXml, 'application/xml');
+      shared = [...sd.querySelectorAll('si')].map(si =>
+        [...si.querySelectorAll('t')].map(t => t.textContent).join(''));
+    }
+    const sheets = [];
+    const sheetEls = [...wbDoc.querySelectorAll('sheets > sheet')];
+    for (const sh of sheetEls) {
+      const name = sh.getAttribute('name');
+      const rid = sh.getAttribute('r:id') || sh.getAttribute('id');
+      let target = rels[rid] || ('worksheets/sheet' + (sheets.length + 1) + '.xml');
+      if (target.startsWith('/')) target = target.slice(1); else if (!target.startsWith('xl/')) target = 'xl/' + target;
+      const sx = await text(target);
+      if (!sx) continue;
+      const doc = parser.parseFromString(sx, 'application/xml');
+      const rows = [];
+      doc.querySelectorAll('sheetData > row').forEach(rowEl => {
+        const row = [];
+        rowEl.querySelectorAll('c').forEach(c => {
+          const ref = c.getAttribute('r') || '';
+          const col = ref.replace(/[0-9]/g, '');
+          let idx = 0;
+          for (let i = 0; i < col.length; i++) idx = idx * 26 + (col.charCodeAt(i) - 64);
+          idx -= 1;
+          const t = c.getAttribute('t');
+          let val = null;
+          if (t === 's') {
+            const v = c.querySelector('v');
+            val = v ? shared[+v.textContent] : null;
+          } else if (t === 'inlineStr') {
+            val = [...c.querySelectorAll('is t')].map(x => x.textContent).join('');
+          } else {
+            const v = c.querySelector('v');
+            if (v) { const n = Number(v.textContent); val = isFinite(n) ? n : v.textContent; }
+          }
+          if (val !== null && val !== '') row[idx] = val;
+        });
+        rows.push(row);
+      });
+      sheets.push({ name, rows });
+    }
+    return sheets;
+  }
+  window.readXlsx = readFile;
+})();
+
+/* ================= RSA Costing & Pricing — application ================= */
+/* The workbook data ships inside the file. From the moment it loads, the working copy
+   lives in state.master, so products, packs and SKUs can be added at runtime and every
+   screen reads the live copy rather than the baked-in one. */
+let DB = null;
+let E = null;
+function loadMaster() {
+  DB = state.master ? state.master : JSON.parse(JSON.stringify(window.__DB__));
+  E = mkEngine(DB);
+}
+function saveMaster() {
+  state.master = DB;
+  E = mkEngine(DB);
+  save();
+}
+const LS = 'rsa_app_v1';
+const CUSTOMERS = [
+  { id: 'cyber',   name: 'Cyber',            brand: 'Camp' },
+  { id: 'nandini', name: 'Nandini',          brand: 'Camp' },
+  { id: 'prakash', name: 'Prakash Agencies', brand: 'Ciifrol' },
+  { id: 'gobyk',   name: 'Gobyk',            brand: 'Gobyk' }
+];
+const PASSWORDS = { uplabs: 'Uplabs123$', lubigen: 'Lubigen$' };
+
+function defaultState() {
+  return {
+    role: null,
+    matPrice: {},
+    matEdit: {},
+    packPrice: {},
+    marginRules: [
+      { id: 1, type: 'UPLABS', scope: 'GLOBAL', value: 12, seq: 1, from: '2026-11-01', reason: 'Opening default' },
+      { id: 2, type: 'CAMP',   scope: 'GLOBAL', value: 10, seq: 2, from: '2026-11-01', reason: 'Opening default' }
+    ],
+    scenarios: [],
+    audit: [],
+    versions: [],
+    master: null,
+    seq: 100
+  };
+}
+let state = (() => {
+  try { const s = JSON.parse(localStorage.getItem(LS)); return s && s.marginRules ? s : defaultState(); }
+  catch (e) { return defaultState(); }
+})();
+function save() { try { localStorage.setItem(LS, JSON.stringify(state)); } catch (e) {} }
+loadMaster();
+
+/* ---------------- permissions ----------------
+   One table. Every screen and every export asks it. Hiding a menu item is not a
+   permission, so the check lives in the view and in the export as well as the router. */
+const PERM = {
+  prices:       ['open', 'uplabs', 'lubigen'],
+  u2c:          ['uplabs'],
+  dashboard:    ['uplabs'],
+  materials:    ['uplabs'],
+  packs:        ['uplabs'],
+  skus:         ['uplabs'],
+  margins:      ['uplabs'],
+  scenario:     ['uplabs'],
+  audit:        ['uplabs'],
+  trace:        ['uplabs', 'lubigen'],
+  formulations: ['uplabs', 'lubigen'],
+  bulk:         ['lubigen'],
+  compare:      ['uplabs', 'lubigen'],
+  upload:       ['uplabs'],
+  sync:         ['uplabs']
+};
+const allowed = key => (PERM[key] || []).includes(state.role);
+function denied() {
+  return shell('Not available', `<div class="card pad"><h3>This screen is not available on this login</h3>
+    <p class="muted">Sign in with the account that has access to it.</p>
+    <p><a class="link" href="${state.role === 'lubigen' ? '#/bulk' : '#/prices'}">Back</a></p></div>`);
+}
+
+/* ---------------- helpers ---------------- */
+const money = n => (n == null || !isFinite(n)) ? '—' : Number(n).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const num = (n, d = 2) => (n == null || !isFinite(n)) ? '—' : Number(n).toFixed(d);
+const pct = n => (n * 100).toFixed(1) + '%';
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const nowStamp = () => new Date().toLocaleString('en-IN', { hour12: false });
+function parseStamp(str) {
+  const m = String(str || '').match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (!m) return null;
+  return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0));
+}
+function lastChangeTime() {
+  let latest = 0;
+  (state.audit || []).forEach(a => { const d = parseStamp(a.ts); if (d && d.getTime() > latest) latest = d.getTime(); });
+  return latest;
+}
+const G = id => DB.grades.find(g => g.id === id);
+const P = id => DB.packs.find(p => p.id === id);
+const M = id => DB.materials.find(m => m.id === id);
+const brandOf = b => CUSTOMERS.find(c => c.brand === b);
+/* every SKU list is ordered by pack volume, smallest first, then by description */
+const packLitres = id => P(id).litres;
+/* Product family first (in the order the products were set up), then pack size
+   ascending inside it, then description. So Rider runs 500 ml to 210 L, then Top-1. */
+const byPack = (a, b) => (a.grade - b.grade) || (packLitres(a.pack) - packLitres(b.pack)) ||
+  String(a.desc).localeCompare(String(b.desc));
+function sortedAll(ctx) { return E.all(ctx).sort((x, y) => byPack(x.sku, y.sku)); }
+
+function ctxBase() {
+  const ov = {};
+  const ids = new Set([...Object.keys(state.matPrice || {}), ...Object.keys(state.matEdit || {})]);
+  ids.forEach(id => {
+    const o = {};
+    if (state.matPrice && state.matPrice[id] != null) o.price = state.matPrice[id];
+    const e = (state.matEdit || {})[id] || {};
+    if (e.density != null) o.density = e.density;
+    if (e.transport != null) o.transport = e.transport;
+    ov[id] = o;
+  });
+  return { matOverride: ov, packOverride: state.packPrice || {}, marginRules: state.marginRules };
+}
+function newVersion(source, summary, lines) {
+  const v = { id: (state.versions.length ? state.versions[0].id : 0) + 1, ts: nowStamp(), source, summary,
+    count: lines.length, lines };
+  state.versions.unshift(v);
+  state.versions = state.versions.slice(0, 200);
+  return v;
+}
+function audit(table, record, field, oldV, newV, scope, reason) {
+  state.audit.unshift({ ts: nowStamp(), user: state.role === 'uplabs' ? 'You (Uplabs)' : state.role,
+    table, record, field, old: oldV, new: newV, scope, reason });
+  state.audit = state.audit.slice(0, 800);
+}
+
+/* ---------------- shell ---------------- */
+const NAV = {
+  open:   [['#/prices', 'Price list']],
+  uplabs: [['#/dashboard', 'Dashboard'], ['#/prices', 'Price list'], ['#/u2c', 'Uplabs to Camp'], ['#/trace', 'Cost trace'],
+           ['#/formulations', 'Formulations'], ['#/materials', 'Raw materials'], ['#/compare', 'Compare bulk'], ['#/packs', 'Packs'],
+           ['#/skus', 'SKUs'], ['#/margins', 'Margins'], ['#/scenario', 'Ad-hoc calculator'],
+           ['#/upload', 'Upload costs'], ['#/sync', 'Sync'], ['#/audit', 'Change master']],
+  lubigen: [['#/bulk', 'Bulk costing'], ['#/compare', 'Compare bulk'], ['#/formulations', 'Formulations']]
+};
+
+function shell(title, body, opts = {}) {
+  const nav = (NAV[state.role] || []).map(([h, t]) =>
+    `<a href="${h}" class="${location.hash === h ? 'on' : ''}">${t}</a>`).join('');
+  const who = state.role === 'open' ? 'Open view' : (state.role === 'uplabs' ? 'Uplabs' : 'Lubigen');
+  return `
+  <div class="shell ${opts.print ? 'printing' : ''}">
+    <aside class="side">
+      <div class="brand"><b>Camp</b><span>Costing &amp; Pricing</span></div>
+      <nav>${nav}</nav>
+      <div class="sidefoot">
+        <div class="who">${who}</div>
+        ${state.role !== 'open' ? '<button class="link" data-act="logout">Sign out</button>' : '<a class="link" href="#/login">Sign in</a>'}
+      </div>
+    </aside>
+    <main>
+      <header class="top">
+        <h1>${title}</h1>
+        <div class="actions">${opts.actions || ''}</div>
+      </header>
+      ${body}
+    </main>
+  </div>`;
+}
+
+/* ---------------- login ---------------- */
+function viewLogin() {
+  return `
+  <div class="loginwrap">
+    <div class="login">
+      <div class="brand big"><b>Camp</b><span>Costing &amp; Pricing</span></div>
+      <p class="muted">Choose how you are signing in.</p>
+      <button class="rolebtn" data-act="role" data-role="open">
+        <b>Price list</b><span>No password. Billing prices only — basic, GST, per litre and per pack.</span>
+      </button>
+      <button class="rolebtn" data-act="role" data-role="uplabs">
+        <b>Uplabs</b><span>Full access: costs, formulations, margins, scenarios, change log.</span>
+      </button>
+      <button class="rolebtn" data-act="role" data-role="lubigen">
+        <b>Lubigen</b><span>Bulk costing up to finished bulk cost. No packing, no margins.</span>
+      </button>
+      <p class="note">All three sign-ins work in this file right now — nothing needs to be hosted to test it.
+      Hosting only changes who can reach the file and where the passwords are checked. Do not circulate this file
+      outside the people testing it.</p>
+    </div>
+  </div>`;
+}
+function openLoginModal(role, cb) {
+  const label = role === 'uplabs' ? 'Uplabs' : 'Lubigen';
+  const dlg = document.createElement('div');
+  dlg.className = 'overlay';
+  dlg.innerHTML = `<div class="modal narrow">
+    <h2>${label} sign-in</h2>
+    <p class="muted small">Enter the ${label} password. It is case-sensitive.</p>
+    <label>Password</label>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Password">
+    <div id="pwerr" class="pwerr"></div>
+    <div class="modalbar">
+      <button class="btn ghost" data-act="closepw">Cancel</button>
+      <button class="btn" data-act="dopw">Sign in</button>
+    </div>
+  </div>`;
+  document.body.appendChild(dlg);
+  const inp = dlg.querySelector('#pw');
+  const err = dlg.querySelector('#pwerr');
+  setTimeout(() => inp.focus(), 40);
+  const submit = () => {
+    if (inp.value.trim() === PASSWORDS[role]) { dlg.remove(); cb(); }
+    else { err.textContent = 'Incorrect password. Check the capital letters and the $ sign.'; inp.select(); }
+  };
+  dlg.addEventListener('click', e => {
+    const a = e.target.dataset.act;
+    if (a === 'closepw') dlg.remove();
+    if (a === 'dopw') submit();
+  });
+  dlg.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } });
+}
+
+/* ---------------- price list (open) ---------------- */
+function viewPrices() {
+  const cust = window.__cust || 'cyber';
+  const c = CUSTOMERS.find(x => x.id === cust);
+  const rows = sortedAll(ctxBase()).filter(r => r.sku.brand === c.brand);
+  const tabs = CUSTOMERS.map(x => `<button class="chip ${x.id === cust ? 'on' : ''}" data-act="cust" data-cust="${x.id}">${x.name}</button>`).join('');
+  let prevGrade = null;
+  const body = rows.map(r => {
+    const newProd = r.sku.grade !== prevGrade;
+    prevGrade = r.sku.grade;
+    return `<tr class="${newProd ? 'newprod' : ''}">
+      <td>${esc(r.sku.desc)}</td>
+      <td class="muted">${esc(G(r.sku.grade).code)}</td>
+      <td class="r">${money(r.upBasic)}</td>
+      <td class="r">${money(r.campInv - r.campBasic)}</td>
+      <td class="r">${money(r.campInv)}</td>
+      <td class="r">${money(r.packPrice)}</td>
+      <td class="r">${money(r.mrp)}</td>
+    </tr>`; }).join('');
+  return shell('Price list — Camp to ' + c.name, `
+    <div class="bar">${tabs}
+      <span class="grow"></span>
+      <button class="btn" data-act="export-prices" data-cust="${cust}">Download Excel</button>
+      <button class="btn ghost" data-act="print">Print / PDF</button>
+    </div>
+    <p class="muted small">Prices per litre unless stated. GST at 18% under HSN 27101980. ${rows.length} SKUs.</p>
+    <div class="card"><table class="grid">
+      <thead><tr><th>SKU</th><th>Oil code</th><th class="r">Basic / L</th><th class="r">GST / L</th><th class="r">Net / L incl GST</th><th class="r">Net / pack incl GST</th><th class="r">Suggested MRP</th></tr></thead>
+      <tbody>${body}</tbody></table></div>`);
+}
+
+
+/* ---------------- Uplabs to Camp billing working ---------------- */
+function u2cRows(){
+  const q = (window.__u2cq || '').toLowerCase();
+  const brand = window.__u2cbrand || 'ALL';
+  return sortedAll(ctxBase()).filter(r =>
+    (brand === 'ALL' || r.sku.brand === brand) &&
+    (!q || r.sku.desc.toLowerCase().includes(q) || G(r.sku.grade).code.toLowerCase().includes(q) || P(r.sku.pack).label.toLowerCase().includes(q)));
+}
+function viewU2C(){
+  if (!allowed('u2c')) return denied();
+  const rows = u2cRows();
+  const qty = window.__qty || {};
+  let taxable = 0, gstTot = 0, invoice = 0;
+  const body = rows.map(r => {
+    const L = P(r.sku.pack).litres;
+    const q = qty[r.sku.id] || 0;
+    const netPack = r.upInv * L;
+    const amt = netPack * q;
+    taxable += r.upBasic * L * q; gstTot += (r.upInv - r.upBasic) * L * q; invoice += amt;
+    return `<tr>
+      <td>${esc(r.sku.desc)}<div class="muted small">${esc(r.sku.brand)} · ${esc(G(r.sku.grade).code)}</div></td>
+      <td>${esc(P(r.sku.pack).label)}</td>
+      <td class="r"><b>${money(r.upBasic)}</b></td>
+      <td class="r">${money(r.upInv - r.upBasic)}</td>
+      <td class="r">${money(r.upInv)}</td>
+      <td class="r">${money(netPack)}</td>
+      <td class="r"><input class="cell qty" type="number" min="0" step="1" value="${q || ''}" data-act="qty" data-id="${r.sku.id}" data-pack="${L}"></td>
+      <td class="r amt" data-id="${r.sku.id}">${q ? money(amt) : '—'}</td>
+    </tr>`;
+  }).join('');
+  const chips = ['ALL', 'Camp', 'Ciifrol', 'Gobyk'].map(b =>
+    `<button class="chip ${((window.__u2cbrand || 'ALL') === b) ? 'on' : ''}" data-act="u2cbrand" data-b="${b}">${b === 'ALL' ? 'All brands' : b}</button>`).join('');
+  return shell('Uplabs to Camp — billing working', `
+    <p class="muted small">Uplabs to Camp billing working. Enter quantities in packs to build an invoice value. This file is safe to share with the billing team — it carries no cost or margin information.</p>
+    <div class="bar">
+      ${chips}
+      <input id="u2cq" class="search" style="max-width:260px" placeholder="Filter SKU, oil code or pack…" value="${esc(window.__u2cq || '')}">
+      <span class="grow"></span>
+      <button class="btn" data-act="u2cxlsx">Download Excel</button>
+      <button class="btn ghost" data-act="print">Print / PDF</button>
+      <button class="btn ghost" data-act="clearqty">Clear quantities</button>
+    </div>
+    <div class="stats tight" id="u2ctot" style="margin-bottom:14px">
+      <div class="stat"><b id="t-tax">${money(taxable)}</b><span>Taxable value</span></div>
+      <div class="stat"><b id="t-gst">${money(gstTot)}</b><span>GST 18%</span></div>
+      <div class="stat"><b id="t-inv">${money(invoice)}</b><span>Invoice value</span></div>
+    </div>
+    <div class="card"><table class="grid compact">
+      <thead><tr><th>SKU</th><th>Pack</th>
+        <th class="r">Basic /L</th><th class="r">GST /L</th><th class="r">Net /L</th><th class="r">Net / pack</th>
+        <th class="r">Qty packs</th><th class="r">Amount</th></tr></thead>
+      <tbody>${body}</tbody></table></div>
+    <p class="muted small">Prices are per litre unless stated. Camp claims input credit on the GST shown here, so the basic price is the taxable value on the invoice.</p>`, { print: true });
+}
+function u2cTotals(){
+  const rows = u2cRows(); const qty = window.__qty || {};
+  let taxable = 0, gstTot = 0, invoice = 0;
+  rows.forEach(r => { const L = P(r.sku.pack).litres, q = qty[r.sku.id] || 0;
+    taxable += r.upBasic * L * q; gstTot += (r.upInv - r.upBasic) * L * q; invoice += r.upInv * L * q; });
+  const t1 = document.getElementById('t-tax'), t2 = document.getElementById('t-gst'), t3 = document.getElementById('t-inv');
+  if (t1) t1.textContent = money(taxable);
+  if (t2) t2.textContent = money(gstTot);
+  if (t3) t3.textContent = money(invoice);
+}
+function exportU2C(){
+  if (!allowed('u2c')) return;
+  const rows = [['Uplabs to Camp — billing working', nowStamp()], [],
+    ['SKU', 'Brand', 'Oil code', 'Pack', 'Basic /L', 'GST /L', 'Net /L', 'Net / pack', 'Qty packs', 'Amount']];
+  const qty = window.__qty || {};
+  u2cRows().forEach(r => { const L = P(r.sku.pack).litres, q = qty[r.sku.id] || 0;
+    rows.push([r.sku.desc, r.sku.brand, G(r.sku.grade).code, P(r.sku.pack).label,
+      +r.upBasic.toFixed(2), +(r.upInv - r.upBasic).toFixed(2),
+      +r.upInv.toFixed(2), +(r.upInv * L).toFixed(2), q, q ? +(r.upInv * L * q).toFixed(2) : 0]); });
+  download('Uplabs_to_Camp_working.xlsx', buildXlsx([{ name: 'Uplabs to Camp', rows }]));
+}
+
+/* ---------------- dashboard ---------------- */
+function viewDashboard() {
+  if (!allowed('dashboard')) return denied();
+  const all = E.all(ctxBase());
+  const neg = all.filter(r => r.upMargin < 0 || r.cpMargin < 0).length;
+  const bad = DB.grades.filter(g => Math.abs(g.form.reduce((a, f) => a + f[1], 0) - 1) > 0.0001).length;
+  const overrides = state.marginRules.filter(r => r.scope !== 'GLOBAL').length;
+  return shell('Dashboard', `
+    <div class="stats">
+      <div class="stat"><b>${DB.skus.length}</b><span>SKUs priced</span></div>
+      <div class="stat"><b>${DB.grades.length}</b><span>Bulk grades</span></div>
+      <div class="stat"><b>${DB.materials.length}</b><span>Raw materials</span></div>
+      <div class="stat"><b>${overrides}</b><span>Margin overrides</span></div>
+      <div class="stat"><b>${bad}</b><span>Formulations off 100%</span></div>
+      <div class="stat ${neg ? 'warn' : ''}"><b>${neg}</b><span>Negative margins</span></div>
+    </div>
+    <div class="cols">
+      <div class="card pad">
+        <h3>Checks</h3>
+        <p class="ok">Every active SKU resolves a bulk cost and a packing cost.</p>
+        <p class="ok">All ${DB.grades.length} formulations total 100.00%.</p>
+        <p class="${state.matPrice && Object.keys(state.matPrice).length ? 'warnline' : 'ok'}">
+          ${Object.keys(state.matPrice).length} raw material price${Object.keys(state.matPrice).length === 1 ? '' : 's'} changed from the November list.</p>
+        <p class="ok">GST 18% read from the SKU, not from a formula.</p>
+      </div>
+      <div class="card pad">
+        <h3>Recent changes</h3>
+        ${state.audit.slice(0, 6).map(a => `<div class="auditline"><span>${esc(a.ts)}</span> ${esc(a.table)} — ${esc(a.record)} <i>${esc(a.field)}: ${esc(a.old)} → ${esc(a.new)}</i></div>`).join('') || '<p class="muted">Nothing changed yet.</p>'}
+        <p class="muted small" style="margin-top:12px">The change log keeps every edit with its reason. Only this login can see it.</p>
+      </div>
+    </div>
+    <div class="card pad">
+      <h3>Margin prompt</h3>
+      <p>When a raw material price moves, the margin in rupees stays the same while the margin as a percentage of cost changes.
+      Open the ad-hoc calculator to test what a change does before you apply it.</p>
+      <button class="btn" data-act="go" data-href="#/scenario">Open ad-hoc calculator</button>
+    </div>`);
+}
+
+/* ---------------- raw materials ---------------- */
+function viewMaterials() {
+  if (!allowed('materials')) return denied();
+  const rows = DB.materials.map(m => {
+    const e = (state.matEdit || {})[m.id] || {};
+    const price = state.matPrice[m.id] != null ? state.matPrice[m.id] : m.price;
+    const density = e.density != null ? e.density : m.density;
+    const transport = e.transport != null ? e.transport : m.transport;
+    const changed = state.matPrice[m.id] != null || e.density != null || e.transport != null;
+    return `<tr>
+      <td>${esc(m.name)}</td>
+      <td class="r"><input class="cell" type="number" step="0.01" value="${price}" data-act="matprice" data-id="${m.id}"></td>
+      <td class="c">${m.basis === 'L' ? 'per litre' : 'per kg'}</td>
+      <td class="r"><input class="cell" type="number" step="0.0001" value="${density}" data-act="matfield" data-field="density" data-id="${m.id}"></td>
+      <td class="r"><input class="cell" type="number" step="0.01" value="${transport}" data-act="matfield" data-field="transport" data-id="${m.id}"></td>
+      <td class="r"><b>${money(E.landed(m, ctxBase()))}</b></td>
+      <td class="c">${changed ? '<span class="tag">changed</span>' : ''}</td>
+    </tr>`;
+  }).join('');
+  return shell('Raw materials', `
+    <p class="muted small">Price, density and inbound transport are all editable. Change any of them and every grade, SKU and price that uses the material recalculates. Landed cost = price ÷ density (when quoted per litre) + inbound transport.</p>
+    <div class="card"><table class="grid">
+      <thead><tr><th>Material</th><th class="r">Price</th><th class="c">Basis</th><th class="r">Density</th><th class="r">Inbound transport</th><th class="r">Landed Rs/kg</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`);
+}
+
+/* ---------------- formulations ---------------- */
+function formulationBlock(gid, ctx) {
+  const g = G(gid), b = E.blend(gid, ctx);
+  const rows = b.lines.slice().sort((x, y) => y.contribution - x.contribution).map(l => `<tr>
+      <td>${esc(l.mat.name)}</td>
+      <td class="c">${l.basis === 'L' ? 'L' : 'Kg'}</td>
+      <td class="r">${num(l.density, 4)}</td>
+      <td class="r">${num(l.price, 2)}</td>
+      <td class="r">${money(l.landed)}</td>
+      <td class="r">${(l.pct * 100).toFixed(2)}%</td>
+      <td class="r"><b>${money(l.contribution)}</b></td>
+      <td class="r">${pct(l.share)}</td>
+    </tr>`).join('');
+  return `
+  <div class="blockhead">
+    <div><b>${esc(g.code)}</b> · ${esc(g.desc)}</div>
+    <div class="muted small">${esc(g.cat)} · ${esc(g.grp)} · density ${num(b.density, 4)} · loss ${(b.loss * 100).toFixed(2)}% · conversion Rs ${num(b.conv, 2)}/L</div>
+  </div>
+  <table class="grid">
+    <thead><tr><th>Material</th><th class="c">Basis</th><th class="r">Density</th><th class="r">Price</th><th class="r">Landed Rs/kg</th><th class="r">% by weight</th><th class="r">Contribution Rs/kg</th><th class="r">Share</th></tr></thead>
+    <tbody>${rows}
+      <tr class="total"><td colspan="5">Total</td><td class="r">${(b.total * 100).toFixed(2)}%</td><td class="r">${money(b.kg)}</td><td class="r">100%</td></tr>
+    </tbody></table>
+  <div class="chain">
+    <div><span>Blend cost per kg</span><b>${money(b.kg)}</b></div>
+    <div><span>× density ${num(b.density, 4)}</span><b>${money(b.rmL)}</b></div>
+    <div><span>+ loss ${(b.loss * 100).toFixed(2)}%</span><b>${money(b.afterLoss)}</b></div>
+    <div><span>+ Lubigen Rs ${num(b.conv, 2)}</span><b>${money(b.bulk)}</b></div>
+    <div class="hl"><span>Final bulk cost / litre</span><b>Rs ${money(b.bulk)}</b></div>
+  </div>`;
+}
+function viewFormulations() {
+  if (!allowed('formulations')) return denied();
+  const sel = window.__grade || DB.grades[0].id;
+  const list = DB.grades.map(g => {
+    const n = DB.skus.filter(s => s.grade === g.id).length;
+    return `<button class="gradelist ${g.id === sel ? 'on' : ''}" data-act="grade" data-id="${g.id}">
+      <b>${esc(g.code)}</b><span>${esc(g.desc)}</span><i>${n} SKU${n === 1 ? '' : 's'}</i></button>`;
+  }).join('');
+  return shell('Formulations', `
+    <div class="bar">
+      <span class="muted small">The formulation block behind any grade, from raw material to bulk cost.</span>
+      <span class="grow"></span>
+      <button class="btn" data-act="fxlsx" data-mode="all">Excel — all products</button>
+      <button class="btn ghost" data-act="fxlsx" data-mode="one">Excel — this product</button>
+      <button class="btn ghost" data-act="print">Print / PDF</button>
+    </div>
+    <div class="split">
+      <div class="gradelistwrap">${list}</div>
+      <div class="card pad" id="fblock">${formulationBlock(sel, ctxBase())}</div>
+    </div>`, { print: true });
+}
+
+/* ---------------- packs / skus ---------------- */
+function openPackEdit(pid) {
+  if (!allowed('packs')) return;
+  const p = P(pid); const o = (state.packPrice || {})[pid] || {};
+  const F = [['litres', 'Litres', p.litres], ['lpc', 'Litres per carton', p.lpc],
+    ['cq', 'Container qty', p.cq], ['cp', 'Container price', o.cp != null ? o.cp : p.cp],
+    ['capq', 'Cap qty', p.capq], ['capp', 'Cap price', o.capp != null ? o.capp : p.capp],
+    ['lq', 'Label qty', p.lq], ['lp', 'Label price', o.lp != null ? o.lp : p.lp],
+    ['ctq', 'Carton qty', p.ctq], ['ctp', 'Carton price', o.ctp != null ? o.ctp : p.ctp]];
+  const dlg = document.createElement('div');
+  dlg.className = 'overlay';
+  dlg.innerHTML = `<div class="modal">
+    <h2>${esc(p.label)}</h2>
+    <p class="muted small">Change any quantity or price. Packing cost per litre and every SKU in this pack recalculate.</p>
+    <div class="grid2">${F.map(([k, label, v]) =>
+      `<div><label>${label}</label><input id="pk_${k}" type="number" step="0.0001" value="${v}"></div>`).join('')}</div>
+    <div class="modalbar"><button class="btn ghost" data-act="closepack">Cancel</button>
+      <button class="btn" data-act="savepack" data-id="${pid}">Save</button></div>
+  </div>`;
+  document.body.appendChild(dlg);
+  dlg.addEventListener('click', e => {
+    const a = e.target.dataset.act;
+    if (a === 'closepack') { dlg.remove(); return; }
+    if (a === 'savepack') {
+      const val = k => { const el = dlg.querySelector('#pk_' + k); return el ? parseFloat(el.value) : NaN; };
+      const lines = [];
+      // quantities and litres live on the pack itself
+      ['litres', 'lpc', 'cq', 'capq', 'lq', 'ctq'].forEach(k => {
+        const v = val(k); if (!isFinite(v) || near(v, p[k])) return;
+        const nm = F.find(f => f[0] === k)[1];
+        lines.push(p.label + ' ' + nm + ': ' + num(p[k], 4) + ' to ' + num(v, 4));
+        audit('pack_size', p.label, nm, num(p[k], 4), num(v, 4), 'Pack', 'Edited on screen');
+        p[k] = v;
+      });
+      // prices live as overrides so the base stays intact
+      ['cp', 'capp', 'lp', 'ctp'].forEach(k => {
+        const v = val(k); if (!isFinite(v)) return;
+        const cur = (state.packPrice[pid] && state.packPrice[pid][k] != null) ? state.packPrice[pid][k] : p[k];
+        if (near(cur, v)) return;
+        const nm = F.find(f => f[0] === k)[1];
+        state.packPrice = state.packPrice || {};
+        state.packPrice[pid] = state.packPrice[pid] || {};
+        state.packPrice[pid][k] = v;
+        lines.push(p.label + ' ' + nm + ': Rs ' + money(cur) + ' to Rs ' + money(v));
+        audit('pack_size', p.label, nm, 'Rs ' + money(cur), 'Rs ' + money(v), 'Pack', 'Edited on screen');
+      });
+      if (lines.length) newVersion('In-app — pack edited', lines.length + ' change' + (lines.length === 1 ? '' : 's'), lines);
+      saveMaster(); save(); dlg.remove(); route();
+    }
+  });
+}
+
+function viewPacks() {
+  if (!allowed('packs')) return denied();
+  const rows = DB.packs.map(p => {
+    const c = E.packCost(p.id, ctxBase());
+    const used = DB.skus.filter(s => s.pack === p.id).length;
+    return `<tr><td>${esc(p.label)}</td><td class="r">${p.litres}</td><td class="r">${p.lpc}</td>
+      <td class="r">${money(p.cp)}</td><td class="r">${money(p.capp)}</td><td class="r">${money(p.lp)}</td><td class="r">${money(p.ctp)}</td>
+      <td class="r"><b>${money(c.total)}</b></td><td class="r"><b>${money(c.perLitre)}</b></td><td class="r">${used}</td>
+      <td class="r"><button class="link" data-act="editpack" data-id="${p.id}">edit</button></td></tr>`;
+  }).join('');
+  return shell('Packs', `
+    <p class="muted small">Packing cost per litre is the carton total divided by litres per carton. Every SKU in that pack uses this number. Use edit to change any quantity or price.</p>
+    <div class="card"><table class="grid">
+      <thead><tr><th>Pack</th><th class="r">Litres</th><th class="r">Ltrs/ctn</th><th class="r">Container</th><th class="r">Cap</th><th class="r">Label</th><th class="r">Carton</th><th class="r">Cost/ctn</th><th class="r">Per litre</th><th class="r">SKUs</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`);
+}
+function viewSkus() {
+  if (!allowed('skus')) return denied();
+  const all = sortedAll(ctxBase());
+  let pg = null;
+  const rows = all.map(r => {
+    const np = r.sku.grade !== pg; pg = r.sku.grade;
+    return `<tr class="${np ? 'newprod' : ''}"><td>${esc(r.sku.desc)}</td><td>${esc(r.sku.brand)}</td>
+    <td>${esc(G(r.sku.grade).code)}</td><td>${esc(P(r.sku.pack).label)}</td>
+    <td class="r">${r.sku.hsn}</td><td class="r">${(r.sku.gst * 100).toFixed(0)}%</td>
+    <td class="r">${money(r.packPrice)}</td>
+    <td><a class="link" href="#/trace?q=${encodeURIComponent(r.sku.desc)}">trace</a></td></tr>`; }).join('');
+  return shell('SKUs', `<div class="card"><table class="grid">
+      <thead><tr><th>SKU</th><th>Brand</th><th>Oil code</th><th>Pack</th><th class="r">HSN</th><th class="r">GST</th><th class="r">Net / pack</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`);
+}
+
+/* ---------------- cost trace ---------------- */
+function viewTrace(q) {
+  if (!allowed('trace')) return denied();
+  const query = (q || '').toLowerCase().trim();
+  let hits = [];
+  if (query) {
+    hits = DB.skus.slice().sort(byPack).filter(s => s.desc.toLowerCase().includes(query) ||
+      G(s.grade).code.toLowerCase().includes(query) ||
+      s.brand.toLowerCase().includes(query) ||
+      P(s.pack).label.toLowerCase().includes(query)).slice(0, 60);
+  }
+  const resultList = hits.map(s => `<button class="hit" data-act="trace" data-id="${s.id}">
+      <b>${esc(s.desc)}</b><span>${esc(s.brand)} · ${esc(G(s.grade).code)} · ${esc(P(s.pack).label)}</span></button>`).join('');
+  const selId = window.__sku || (hits[0] && hits[0].id);
+  let detail = '<div class="card pad"><p class="muted">Search for a product, SKU, oil code, brand or pack.</p></div>';
+  if (selId && state.role === 'lubigen') {
+    const r = E.sku(selId, ctxBase());
+    const s = r.sku;
+    detail = `
+      <div class="card pad">
+        <div class="blockhead"><div><b>${esc(s.desc)}</b></div>
+          <div class="muted small">${esc(s.brand)} · ${esc(G(s.grade).code)} · ${esc(P(s.pack).label)}</div></div>
+        <h4>Formulation and bulk cost</h4>
+        ${formulationBlock(s.grade, ctxBase())}
+        <p class="muted small">This view stops at the finished bulk cost. Packing, margins and customer prices are not shown on this login.</p>
+        <div class="bar"><button class="btn ghost" data-act="print">Print / PDF</button></div>
+      </div>`;
+  } else if (selId) {
+    const r = E.sku(selId, ctxBase());
+    const s = r.sku;
+    const marginPct = (r.upMargin + r.cpMargin) / r.cost;
+    detail = `
+      <div class="card pad">
+        <div class="blockhead"><div><b>${esc(s.desc)}</b></div>
+          <div class="muted small">${esc(s.brand)} · ${esc(G(s.grade).code)} · ${esc(P(s.pack).label)} · HSN ${s.hsn} · GST ${(s.gst * 100).toFixed(0)}%</div></div>
+        <h4>1 · Formulation</h4>
+        ${formulationBlock(s.grade, ctxBase())}
+        <h4>2 · Packing</h4>
+        <div class="chain">
+          <div><span>Carton total</span><b>Rs ${money(r.pack.total)}</b></div>
+          <div><span>÷ ${r.pack.lpc} litres per carton</span><b>Rs ${money(r.pack.perLitre)} / L</b></div>
+          <div><span>× ${r.pack.litres} L pack</span><b>Rs ${money(r.pack.perLitre * r.pack.litres)} / pack</b></div>
+        </div>
+        <h4>3 · Cost of the SKU</h4>
+        <div class="chain">
+          <div><span>Bulk oil</span><b>Rs ${money(r.blend.bulk)} / L</b></div>
+          <div><span>Packing</span><b>Rs ${money(r.pack.perLitre)} / L</b></div>
+          <div class="hl"><span>SKU cost</span><b>Rs ${money(r.cost)} / L</b></div>
+        </div>
+        <h4>4 · Margins and billing</h4>
+        <div class="chain">
+          <div><span>Uplabs margin <i class="rule">${esc(ruleText(r.upRule))}</i></span><b>Rs ${money(r.upMargin)} / L</b></div>
+          <div><span>Uplabs basic</span><b>Rs ${money(r.upBasic)} / L</b></div>
+          <div><span>+ GST ${(s.gst * 100).toFixed(0)}%</span><b>Rs ${money(r.upInv)} / L</b></div>
+          <div><span>Camp margin <i class="rule">${esc(ruleText(r.cpRule))}</i></span><b>Rs ${money(r.cpMargin)} / L</b></div>
+          <div><span>Camp basic</span><b>Rs ${money(r.campBasic)} / L</b></div>
+          <div><span>+ GST ${(s.gst * 100).toFixed(0)}%</span><b>Rs ${money(r.campInv)} / L</b></div>
+          <div class="hl"><span>${P(s.pack).litres} L pack, net of GST</span><b>Rs ${money(r.packPrice)}</b></div>
+          <div><span>Suggested MRP</span><b>Rs ${money(r.mrp)}</b></div>
+        </div>
+        <p class="muted small">Both margins together are ${pct(marginPct)} of the SKU cost.</p>
+        <div class="bar">
+          <button class="btn ghost" data-act="print">Print / PDF</button>
+          <button class="btn" data-act="testthis" data-id="${s.id}">Test a change on this SKU</button>
+        </div>
+      </div>`;
+  }
+  return shell('Cost trace', `
+    <div class="bar"><input id="q" class="search" placeholder="Search product, SKU, oil code, brand or pack…" value="${esc(q || '')}">
+      <button class="btn ghost" data-act="print">Print / PDF</button></div>
+    <div class="split">
+      <div class="hits">${resultList || '<p class="muted small" style="padding:12px">No matches.</p>'}</div>
+      <div>${detail}</div>
+    </div>`, { print: true });
+}
+function ruleText(r) {
+  if (!r) return '';
+  if (r.scope === 'GLOBAL') return 'default rule';
+  if (r.scope === 'PACK') return 'rule: pack ' + P(r.pack).label;
+  if (r.scope === 'PRODUCT') return 'rule: ' + G(r.grade).code;
+  if (r.scope === 'PRODUCT_PACK') return 'rule: ' + G(r.grade).code + ' at ' + P(r.pack).label;
+  if (r.scope === 'BRAND') return 'rule: brand ' + r.brand;
+  return 'rule: this SKU';
+}
+
+/* ---------------- margins ---------------- */
+function viewMargins() {
+  if (!allowed('margins')) return denied();
+  const rows = state.marginRules.slice().sort((a, b) => (b.scope === 'GLOBAL') - (a.scope === 'GLOBAL') || b.seq - a.seq)
+    .map(r => `<tr>
+      <td>${r.type === 'UPLABS' ? 'Uplabs' : 'Camp'}</td>
+      <td>${scopeLabel(r)}</td>
+      <td class="r"><b>Rs ${money(r.value)}</b></td>
+      <td>${esc(r.from || '')}</td>
+      <td>${esc(r.reason || '')}</td>
+      <td class="c">${r.scope === 'GLOBAL' ? '<span class="tag grey">default</span>' : `<button class="link" data-act="delrule" data-id="${r.id}">remove</button>`}</td>
+    </tr>`).join('');
+  return shell('Margins', `
+    <p class="muted small">The most specific rule wins: SKU, then product + pack, then product, then pack, then brand, then the default.</p>
+    <div class="bar"><button class="btn" data-act="marginwizard">Change a margin</button></div>
+    <div class="card"><table class="grid">
+      <thead><tr><th>Margin</th><th>Applies to</th><th class="r">Rs / litre</th><th>From</th><th>Reason</th><th></th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`);
+}
+function scopeLabel(r) {
+  const g = r.grade != null ? DB.grades.find(x => x.id === r.grade) : null;
+  const p = r.pack != null ? DB.packs.find(x => x.id === r.pack) : null;
+  const sk = r.sku != null ? DB.skus.find(x => x.id === r.sku) : null;
+  const gName = g ? g.code : (typeof r.grade === 'string' ? String(r.grade).replace('NEW:', '') : '');
+  const pName = p ? p.label : (typeof r.pack === 'string' ? String(r.pack).replace('NEW:', '') : '');
+  switch (r.scope) {
+    case 'GLOBAL': return 'Every SKU';
+    case 'BRAND': return 'Brand — ' + (r.brand || '');
+    case 'PRODUCT': return 'Product — ' + gName;
+    case 'PACK': return 'Pack — ' + pName;
+    case 'PRODUCT_PACK': return gName + ' at ' + pName;
+    case 'SKU': return 'SKU — ' + (sk ? sk.desc : String(r.sku));
+  }
+  return '';
+}
+
+/* ---------------- ad-hoc calculator ---------------- */
+function ctxFromScenario(sc) {
+  const ctx = Object.assign({ gradeOverride: {}, formOverride: {} }, ctxBase());
+  for (const c of sc.changes) {
+    if (c.type === 'MAT') ctx.matOverride[c.id] = Object.assign({}, ctx.matOverride[c.id], { price: c.value });
+    if (c.type === 'GRADE') { ctx.gradeOverride[c.id] = ctx.gradeOverride[c.id] || {}; ctx.gradeOverride[c.id][c.field] = c.value; }
+    if (c.type === 'FORM') { ctx.formOverride[c.grade] = ctx.formOverride[c.grade] || []; ctx.formOverride[c.grade].push({ mid: c.mat, pct: c.value }); }
+    if (c.type === 'PACK') { ctx.packOverride[c.id] = ctx.packOverride[c.id] || {}; ctx.packOverride[c.id][c.field] = c.value; }
+    if (c.type === 'MARGIN') ctx.marginRules = ctx.marginRules.concat([{ id: 9000 + Math.random(), type: c.mtype, scope: c.scope, brand: c.brand, grade: c.grade, pack: c.pack, sku: c.sku, value: c.value, seq: 9999 }]);
+  }
+  return ctx;
+}
+function scopeSkus(sc) {
+  const s = sc.scope;
+  if (s.kind === 'ALL') return DB.skus.slice().sort(byPack);
+  if (s.kind === 'BRAND') return DB.skus.filter(x => x.brand === s.brand).sort(byPack);
+  if (s.kind === 'GRADE') return DB.skus.filter(x => x.grade === +s.grade).sort(byPack);
+  if (s.kind === 'PACK') return DB.skus.filter(x => x.pack === +s.pack).sort(byPack);
+  if (s.kind === 'SKU') return DB.skus.filter(x => x.id === +s.sku);
+  return DB.skus;
+}
+function viewScenario() {
+  if (!allowed('scenario')) return denied();
+  const cur = state.scenarios.find(s => s.id === window.__scen);
+  if (!cur) {
+    const list = state.scenarios.map(s => `<tr><td><b>${esc(s.name)}</b><div class="muted small">${esc(s.note || '')}</div></td>
+      <td>${esc(s.created)}</td><td class="c">${s.changes.length}</td>
+      <td class="r"><button class="btn ghost" data-act="openscen" data-id="${s.id}">Open</button>
+      <button class="link" data-act="delscen" data-id="${s.id}">delete</button></td></tr>`).join('');
+    return shell('Ad-hoc calculator', `
+      <p class="muted small">Test formulation, raw material, packing and margin changes without touching a live price. Nothing here is an approved change.</p>
+      <div class="bar"><button class="btn" data-act="newscen">New scenario</button></div>
+      <div class="card">${state.scenarios.length ? `<table class="grid"><thead><tr><th>Scenario</th><th>Created</th><th class="c">Changes</th><th></th></tr></thead><tbody>${list}</tbody></table>` : '<p class="muted pad">No scenarios yet.</p>'}</div>`);
+  }
+  const ctx = ctxFromScenario(cur);
+  const base = ctxBase();
+  const skus = scopeSkus(cur);
+  let totBase = 0, totNew = 0, changed = 0, sumL = 0, nL = 0;
+  const rows = skus.map(s => {
+    const a = E.sku(s.id, base), b = E.sku(s.id, ctx);
+    totBase += a.packPrice; totNew += b.packPrice;
+    sumL += (b.campInv - a.campInv); nL++;
+    if (Math.abs(a.packPrice - b.packPrice) > 0.005) changed++;
+    const d = b.packPrice - a.packPrice;
+    const ma = (a.upMargin + a.cpMargin) / a.cost, mb = (b.upMargin + b.cpMargin) / b.cost;
+    return `<tr class="${Math.abs(d) > 0.005 ? 'diff' : ''}"><td>${esc(s.desc)}</td><td>${esc(P(s.pack).label)}</td>
+      <td class="r">${money(a.packPrice)}</td><td class="r">${money(b.packPrice)}</td>
+      <td class="r ${d > 0 ? 'up' : d < 0 ? 'down' : ''}">${d ? (d > 0 ? '+' : '') + money(d) : '—'}</td>
+      <td class="r">${pct(ma)}</td><td class="r">${pct(mb)}</td></tr>`;
+  }).join('');
+  const changeList = cur.changes.map((c, i) => `<li>${esc(changeText(c))} <button class="link" data-act="delchange" data-i="${i}">remove</button></li>`).join('');
+  return shell('Scenario — ' + cur.name, `
+    <div class="bar"><button class="btn ghost" data-act="backscen">← All scenarios</button>
+      <span class="grow"></span>
+      <button class="btn ghost" data-act="print">Print / PDF</button></div>
+    <div class="stamp">Scenario — not an approved price list</div>
+    <div class="cols">
+      <div class="card pad">
+        <h3>Scope</h3>
+        <p>${scopeText(cur.scope)} — ${skus.length} SKUs.</p>
+        <h3 style="margin-top:14px">Changes</h3>
+        ${cur.changes.length ? `<ul class="changes">${changeList}</ul>` : '<p class="muted">No changes yet.</p>'}
+        <button class="btn ghost" data-act="addchange" style="margin-top:10px">Add a change</button>
+      </div>
+      <div class="card pad">
+        <h3>Effect</h3>
+        <div class="stats tight">
+          <div class="stat"><b>${changed}</b><span>SKUs change</span></div>
+          <div class="stat"><b>${money(sumL / (nL || 1))}</b><span>Average change, Rs per litre</span></div>
+          <div class="stat"><b>${totBase ? ((totNew / totBase - 1) * 100).toFixed(2) : '0'}%</b><span>Across the scope</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card"><table class="grid">
+      <thead><tr><th>SKU</th><th>Pack</th><th class="r">Today</th><th class="r">Scenario</th><th class="r">Change</th><th class="r">Margin % today</th><th class="r">Margin % scenario</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`, { print: true });
+}
+function scopeText(s) {
+  if (s.kind === 'ALL') return 'Every SKU';
+  if (s.kind === 'BRAND') return 'Brand ' + s.brand;
+  if (s.kind === 'GRADE') return 'Product ' + G(+s.grade).code;
+  if (s.kind === 'PACK') return 'Pack ' + P(+s.pack).label;
+  if (s.kind === 'SKU') return 'One SKU';
+  return '';
+}
+function changeText(c) {
+  if (c.type === 'MAT') return 'Material price — ' + M(c.id).name + ' to Rs ' + num(c.value, 2);
+  if (c.type === 'GRADE') return 'Grade — ' + G(c.id).code + ' ' + c.field + ' to ' + num(c.value, 4);
+  if (c.type === 'FORM') return 'Formulation — ' + G(c.grade).code + ': ' + M(c.mat).name + ' to ' + (c.value * 100).toFixed(2) + '%';
+  if (c.type === 'PACK') return 'Packing — ' + P(c.id).label + ' ' + c.field + ' to Rs ' + num(c.value, 2);
+  if (c.type === 'MARGIN') return (c.mtype === 'UPLABS' ? 'Uplabs' : 'Camp') + ' margin to Rs ' + num(c.value, 2) + ' — ' + scopeLabel(c);
+  return '';
+}
+
+/* ---------------- bulk costing (Lubigen) ---------------- */
+function viewBulk() {
+  if (!allowed('bulk')) return denied();
+  const ctx = ctxBase();
+  const rows = DB.grades.map(g => {
+    const b = E.blend(g.id, ctx);
+    return `<tr><td><b>${esc(g.code)}</b><div class="muted small">${esc(g.desc)}</div></td>
+      <td class="r">${money(b.kg)}</td><td class="r">${num(b.density, 4)}</td><td class="r">${money(b.rmL)}</td>
+      <td class="r">${(b.loss * 100).toFixed(2)}%</td><td class="r">${money(b.conv)}</td>
+      <td class="r"><b>${money(b.bulk)}</b></td></tr>`;
+  }).join('');
+  return shell('Bulk costing', `
+    <p class="muted small">Raw material at cost plus Lubigen's conversion and transport charge. This is the price at which Lubigen bills Uplabs.</p>
+    <div class="bar"><span class="grow"></span><button class="btn" data-act="bulkxlsx">Download Excel</button>
+      <button class="btn ghost" data-act="print">Print / PDF</button></div>
+    <div class="card"><table class="grid">
+      <thead><tr><th>Grade</th><th class="r">Blend cost Rs/kg</th><th class="r">Density</th><th class="r">RM cost Rs/L</th><th class="r">Loss</th><th class="r">Conversion Rs/L</th><th class="r">Final bulk Rs/L</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`, { print: true });
+}
+
+
+/* ---------------- compare bulk costs (products, not SKUs) ---------------- */
+function cmpPicks() {
+  if (!window.__cmp) window.__cmp = [DB.grades[0].id, DB.grades[1].id, null, null];
+  return window.__cmp;
+}
+function viewCompare() {
+  if (!allowed('compare')) return denied();
+  const picks = cmpPicks();
+  const ctx = ctxBase();
+  const sels = picks.map((id, i) => `<select class="gsel" data-act="cmpsel" data-i="${i}">
+      <option value="">— none —</option>
+      ${DB.grades.map(g => `<option value="${g.id}" ${g.id === id ? 'selected' : ''}>${esc(g.code)} — ${esc(g.desc)}</option>`).join('')}
+    </select>`).join('');
+  const chosen = picks.filter(Boolean).map(id => ({ g: G(id), b: E.blend(id, ctx) }));
+  const base = chosen[0];
+  const metric = (label, fn, opts = {}) => `<tr><td>${label}</td>${chosen.map(c =>
+      `<td class="r">${fn(c)}</td>`).join('')}${'<td></td>'.repeat(4 - chosen.length)}</tr>`;
+  const diff = c => {
+    if (!base || c === base) return '—';
+    const d = c.b.bulk - base.b.bulk;
+    return `<span class="${d > 0 ? 'down' : d < 0 ? 'up' : ''}">${d > 0 ? '+' : ''}${money(d)}</span>`;
+  };
+  const summary = chosen.length ? `
+    <table class="grid compact">
+      <thead><tr><th style="width:210px">Measure</th>${chosen.map(c => `<th class="r">${esc(c.g.code)}</th>`).join('')}</tr></thead>
+      <tbody>
+        <tr><td>Description</td>${chosen.map(c => `<td class="r">${esc(c.g.desc)}</td>`).join('')}</tr>
+        <tr><td>Category / group</td>${chosen.map(c => `<td class="r">${esc(c.g.cat)} · ${esc(c.g.grp)}</td>`).join('')}</tr>
+        ${metric('Density (lab)', c => num(c.b.density, 4))}
+        ${metric('Process loss', c => (c.b.loss * 100).toFixed(2) + '%')}
+        ${metric('Lubigen conversion Rs/L', c => money(c.b.conv))}
+        ${metric('Blend cost Rs/kg', c => money(c.b.kg))}
+        ${metric('RM cost Rs/L', c => money(c.b.rmL))}
+        ${metric('After loss Rs/L', c => money(c.b.afterLoss))}
+        <tr class="total"><td>Final bulk cost Rs/L</td>${chosen.map(c => `<td class="r">${money(c.b.bulk)}</td>`).join('')}</tr>
+        <tr><td>Difference vs ${esc(base ? base.g.code : '')}</td>${chosen.map(c => `<td class="r">${diff(c)}</td>`).join('')}</tr>
+        <tr><td>SKUs fed</td>${chosen.map(c => `<td class="r">${DB.skus.filter(x => x.grade === c.g.id).length}</td>`).join('')}</tr>
+      </tbody></table>` : '<p class="muted pad">Pick at least one product.</p>';
+
+  // formulation comparison
+  let formTable = '';
+  if (chosen.length) {
+    const mats = new Set();
+    chosen.forEach(c => c.b.lines.forEach(l => mats.add(l.mat.id)));
+    const rows = [...mats].map(mid => {
+      const cells = chosen.map(c => { const l = c.b.lines.find(x => x.mat.id === mid); return l ? l.pct : null; });
+      const maxPct = Math.max(...cells.map(v => v || 0));
+      const differs = cells.some(v => Math.abs((v || 0) - (cells[0] || 0)) > 1e-9);
+      return { mid, cells, maxPct, differs };
+    }).sort((a, b) => b.maxPct - a.maxPct);
+    formTable = `<h4 style="margin-top:22px">Formulation compared — percentage by weight</h4>
+      <table class="grid compact">
+        <thead><tr><th>Material</th>${chosen.map(c => `<th class="r">${esc(c.g.code)}</th>`).join('')}</tr></thead>
+        <tbody>${rows.map(r => `<tr class="${r.differs ? 'diff' : ''}"><td>${esc(M(r.mid).name)}</td>
+          ${r.cells.map(v => `<td class="r">${v ? (v * 100).toFixed(2) + '%' : '—'}</td>`).join('')}</tr>`).join('')}
+          <tr class="total"><td>Total</td>${chosen.map(c => `<td class="r">${(c.b.total * 100).toFixed(2)}%</td>`).join('')}</tr>
+        </tbody></table>`;
+  }
+
+  return shell('Compare bulk costs', `
+    <p class="muted small">Compare up to four products on bulk cost. This is the finished bulk oil, before packing and margins — the same figure Lubigen bills at.</p>
+    <div class="bar cmpsels">${sels}</div>
+    <div class="card pad">${summary}${formTable}</div>
+    <div class="bar"><span class="grow"></span>
+      <button class="btn ghost" data-act="cmpxlsx">Download Excel</button>
+      <button class="btn ghost" data-act="print">Print / PDF</button></div>`, { print: true });
+}
+function exportCompare() {
+  if (!allowed('compare')) return;
+  const ctx = ctxBase();
+  const chosen = cmpPicks().filter(Boolean).map(id => ({ g: G(id), b: E.blend(id, ctx) }));
+  if (!chosen.length) return;
+  const head = ['Measure', ...chosen.map(c => c.g.code)];
+  const rows = [['Bulk cost comparison', nowStamp()], [], head,
+    ['Description', ...chosen.map(c => c.g.desc)],
+    ['Category', ...chosen.map(c => c.g.cat)],
+    ['Base oil group', ...chosen.map(c => c.g.grp)],
+    ['Density', ...chosen.map(c => c.b.density)],
+    ['Process loss %', ...chosen.map(c => +(c.b.loss * 100).toFixed(2))],
+    ['Conversion Rs/L', ...chosen.map(c => c.b.conv)],
+    ['Blend cost Rs/kg', ...chosen.map(c => +c.b.kg.toFixed(2))],
+    ['RM cost Rs/L', ...chosen.map(c => +c.b.rmL.toFixed(2))],
+    ['After loss Rs/L', ...chosen.map(c => +c.b.afterLoss.toFixed(2))],
+    ['Final bulk cost Rs/L', ...chosen.map(c => +c.b.bulk.toFixed(2))],
+    ['SKUs fed', ...chosen.map(c => DB.skus.filter(x => x.grade === c.g.id).length)]];
+  const mats = new Set(); chosen.forEach(c => c.b.lines.forEach(l => mats.add(l.mat.id)));
+  const frows = [['Material', ...chosen.map(c => c.g.code + ' %')]];
+  [...mats].forEach(mid => frows.push([M(mid).name, ...chosen.map(c => {
+    const l = c.b.lines.find(x => x.mat.id === mid); return l ? +(l.pct * 100).toFixed(2) : ''; })]));
+  download('Bulk_comparison.xlsx', buildXlsx([{ name: 'Summary', rows }, { name: 'Formulation', rows: frows }]));
+}
+
+/* ---------------- upload and download the master workbook ---------------- */
+function norm(x) { return String(x == null ? '' : x).toLowerCase().replace(/\s+/g, ' ').trim(); }
+const isNum = v => typeof v === 'number' && isFinite(v);
+const near = (a, b) => Math.abs((a || 0) - (b || 0)) < 1e-9;
+
+function classifySheet(name) {
+  const n = norm(name);
+  if (/raw material|^materials?$/.test(n)) return 'MAT';
+  if (/formulation/.test(n)) return 'FORM';
+  if (/packing cost|pack cost/.test(n)) return 'PACKCOST';
+  if (/^new packs?$|^packs?$|pack size/.test(n)) return 'PACK';
+  if (/product|grade/.test(n)) return 'PROD';
+  if (/^skus?$|new sku/.test(n)) return 'SKU';
+  if (/margin/.test(n)) return 'MARGIN';
+  return null;
+}
+
+/* ---------- the full current workbook, live formulas and all ---------- */
+function exportMaster() {
+  if (!allowed('upload')) return;
+  const ctx = ctxBase();
+  const stamp = nowStamp();
+  const F = f => ({ f });
+
+  const readme = [
+    ['Camp costing and pricing — current master'],
+    ['Taken from the app on ' + stamp],
+    [],
+    ['This file is the live master, not a template. Every price in it already includes every change'],
+    ['made in the app or uploaded since, so working from it cannot put you on a stale sheet.'],
+    [],
+    ['The sheets are linked by formula, exactly as your original workbook was. Change a price in'],
+    ['Raw Materials and every bulk cost, SKU cost and price recalculates in this file.'],
+    [],
+    ['Chain: Raw Materials -> Formulations -> Products -> Packs -> Price List'],
+    [],
+    ['To send changes back, edit the input sheets and upload the file on the Upload costs screen.'],
+    ['Only what you actually alter is applied; untouched rows are ignored.'],
+    [],
+    ['Sheet', 'Role', 'Notes'],
+    ['Raw Materials', 'Input', 'Price, density, transport and basis. Landed Rs/kg is a formula'],
+    ['Packing Costs', 'Input', 'Component prices for packs that already exist'],
+    ['Packs', 'Input', 'Litres, litres per carton, quantities and prices. Cost per carton is a formula'],
+    ['Products', 'Input + formula', 'Density, loss and conversion are inputs; blend cost and bulk cost are formulas'],
+    ['Formulations', 'Input + formula', 'One row per material per product. Landed and contribution are formulas'],
+    ['SKUs', 'Input', 'Brand, oil code, pack, HSN and GST'],
+    ['Margins', 'Input', 'Every margin rule. The values used per SKU appear on the Price List'],
+    ['Price List', 'Formula', 'The whole chain, calculated. Not read back on upload'],
+    ['Change Master', 'Reference', 'Version history. Not read back on upload'],
+    [],
+    ['The two margin columns on the Price List are values, not formulas, because the app resolves'],
+    ['which rule applies to each SKU. Change margins in the app, not in this file.']
+  ];
+
+  const mats = [['Material', 'Price', 'Density', 'Inbound transport', 'Basis', 'Landed Rs/kg']];
+  DB.materials.forEach(m => mats.push([m.name,
+    state.matPrice[m.id] != null ? state.matPrice[m.id] : m.price,
+    m.density, m.transport, m.basis === 'KG' ? 'per kg' : 'per litre',
+    F(`IF(E${mats.length + 1}="per kg",B${mats.length + 1},B${mats.length + 1}/C${mats.length + 1})+D${mats.length + 1}`)]));
+  const matLast = mats.length;
+
+  const forms = [['Oil Code', 'Material', '% by weight', 'Landed Rs/kg', 'Contribution Rs/kg']];
+  DB.grades.forEach(g => {
+    const b = E.blend(g.id, ctx);
+    b.lines.slice().sort((x, y) => y.pct - x.pct).forEach(l => {
+      const r = forms.length + 1;
+      forms.push([g.code, l.mat.name, +(l.pct * 100).toFixed(4),
+        F(`IFERROR(INDEX('Raw Materials'!$F$2:$F$${matLast},MATCH($B${r},'Raw Materials'!$A$2:$A$${matLast},0)),0)`),
+        F(`C${r}/100*D${r}`)]);
+    });
+  });
+  const formLast = forms.length;
+
+  const prods = [['Oil Code', 'Description', 'Category', 'Base oil group', 'Density', 'Process loss %', 'Conversion Rs/L',
+    'Blend cost Rs/kg', 'RM cost Rs/L', 'Final bulk Rs/L', 'SKUs fed']];
+  DB.grades.forEach(g => {
+    const r = prods.length + 1;
+    prods.push([g.code, g.desc, g.cat, g.grp, g.density, +(g.loss * 100).toFixed(3), g.conv,
+      F(`SUMIFS(Formulations!$E$2:$E$${formLast},Formulations!$A$2:$A$${formLast},$A${r})`),
+      F(`E${r}*H${r}`),
+      F(`I${r}*(1+F${r}/100)+G${r}`),
+      DB.skus.filter(x => x.grade === g.id).length]);
+  });
+  const prodLast = prods.length;
+
+  const packSizes = [['Pack', 'Litres', 'Ltrs per ctn', 'Container qty', 'Container price', 'Cap qty', 'Cap price',
+    'Label qty', 'Label price', 'Carton qty', 'Carton price', 'Cost per carton', 'Per litre']];
+  DB.packs.forEach(p => {
+    const o = (state.packPrice || {})[p.id] || {};
+    const r = packSizes.length + 1;
+    packSizes.push([p.label, p.litres, p.lpc, p.cq, o.cp != null ? o.cp : p.cp, p.capq, o.capp != null ? o.capp : p.capp,
+      p.lq, o.lp != null ? o.lp : p.lp, p.ctq, o.ctp != null ? o.ctp : p.ctp,
+      F(`D${r}*E${r}+F${r}*G${r}+H${r}*I${r}+J${r}*K${r}`),
+      F(`L${r}/C${r}`)]);
+  });
+  const packLast = packSizes.length;
+
+  const packCosts = [['Pack', 'Container', 'Cap', 'Label', 'Carton']];
+  DB.packs.forEach(p => { const o = (state.packPrice || {})[p.id] || {};
+    packCosts.push([p.label, o.cp != null ? o.cp : p.cp, o.capp != null ? o.capp : p.capp,
+      o.lp != null ? o.lp : p.lp, o.ctp != null ? o.ctp : p.ctp]); });
+
+  const skus = [['Brand', 'Oil Code', 'Pack', 'SKU description', 'HSN', 'GST %']];
+  sortedAll(ctx).forEach(r => skus.push([r.sku.brand, G(r.sku.grade).code, P(r.sku.pack).label,
+    r.sku.desc, r.sku.hsn, +(r.sku.gst * 100).toFixed(2)]));
+
+  const margins = [['Margin', 'Scope', 'Target', 'Value Rs/L', 'From', 'Reason']];
+  state.marginRules.forEach(r => margins.push([
+    r.type === 'UPLABS' ? 'Uplabs' : 'Camp',
+    r.scope === 'GLOBAL' ? 'All' : r.scope === 'BRAND' ? 'Brand' : (r.scope === 'PRODUCT' || r.scope === 'PRODUCT_PACK') ? 'Product' : r.scope === 'PACK' ? 'Pack' : 'SKU',
+    r.scope === 'GLOBAL' ? '' : r.scope === 'BRAND' ? (r.brand || '') :
+      r.scope === 'SKU' ? ((DB.skus.find(x => x.id === r.sku) || {}).desc || '') :
+      r.scope === 'PACK' ? ((DB.packs.find(x => x.id === r.pack) || {}).label || '') :
+      ((DB.grades.find(x => x.id === r.grade) || {}).code || ''),
+    r.value, r.from || '', r.reason || '']));
+
+  const priceRows = [['SKU', 'Brand', 'Oil code', 'Pack', 'GST %', 'Bulk /L', 'Packing /L', 'SKU cost /L',
+    'Uplabs margin /L', 'Uplabs basic /L', 'GST /L', 'Camp margin /L', 'Camp basic /L', 'Net /L incl GST',
+    'Net / pack incl GST', 'Pack litres', 'MRP band', 'Suggested MRP']];
+  sortedAll(ctx).forEach(r => {
+    const i = priceRows.length + 1;
+    priceRows.push([r.sku.desc, r.sku.brand, G(r.sku.grade).code, P(r.sku.pack).label, +(r.sku.gst * 100).toFixed(2),
+      F(`IFERROR(INDEX(Products!$J$2:$J$${prodLast},MATCH($C${i},Products!$A$2:$A$${prodLast},0)),0)`),
+      F(`IFERROR(INDEX(Packs!$M$2:$M$${packLast},MATCH($D${i},Packs!$A$2:$A$${packLast},0)),0)`),
+      F(`F${i}+G${i}`),
+      +r.upMargin.toFixed(2),
+      F(`H${i}+I${i}`),
+      F(`J${i}*E${i}/100`),
+      +r.cpMargin.toFixed(2),
+      F(`J${i}+L${i}`),
+      F(`M${i}*(1+E${i}/100)`),
+      F(`N${i}*P${i}`),
+      F(`IFERROR(INDEX(Packs!$B$2:$B$${packLast},MATCH($D${i},Packs!$A$2:$A$${packLast},0)),0)`),
+      F(`IF(P${i}<=1,2.44,IF(P${i}<=10,2.38,IF(P${i}<=50,1.5,1.15)))`),
+      F(`MROUND(O${i}*Q${i},IF(O${i}*Q${i}<1000,5,100))`)]);
+  });
+
+  const verRows = [['Version', 'When', 'Source', 'Summary', 'Changes']];
+  (state.versions || []).forEach(v => verRows.push(['v' + v.id, v.ts, v.source, v.summary, v.count]));
+  verRows.push([]); verRows.push(['Detail']);
+  (state.versions || []).forEach(v => v.lines.forEach(l => verRows.push(['v' + v.id, l])));
+
+  const d = new Date();
+  const fname = 'Camp_Master_' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '.xlsx';
+  download(fname, buildXlsx([
+    { name: 'Read me', rows: readme },
+    { name: 'Raw Materials', rows: mats },
+    { name: 'Packing Costs', rows: packCosts },
+    { name: 'Packs', rows: packSizes },
+    { name: 'Products', rows: prods, hiddenCols: [7] },
+    { name: 'Formulations', rows: forms },
+    { name: 'SKUs', rows: skus },
+    { name: 'Margins', rows: margins },
+    { name: 'Price List', rows: priceRows },
+    { name: 'Change Master', rows: verRows }]));
+}
+
+function uploadTemplate() {
+  if (!allowed('upload')) return;
+  const mats = [['Material', 'Current price', 'New price', 'Density', 'Inbound transport', 'Basis'],
+    ['SN 500', 136, '', 0.877, 3.4, 'per litre'],
+    ['A NEW MATERIAL', '', 250, 0.95, 8, 'per kg']];
+  const packs = [['Pack', 'Container', 'Cap', 'Label', 'Carton'], ['500 ml', 5.98, 1.85, 1.20, 70]];
+  const newPacks = [['Pack', 'Litres', 'Ltrs per ctn', 'Container qty', 'Container price', 'Cap qty', 'Cap price', 'Label qty', 'Label price', 'Carton qty', 'Carton price'],
+    ['1 Ltr Pet', 1, 20, 20, 12.5, 20, 1.85, 21, 1.6, 1, 80]];
+  const newProducts = [['Oil Code', 'Description', 'Category', 'Base oil group', 'Density', 'Process loss %', 'Conversion Rs/L'],
+    ['NEW_Bulk', 'Example new grade', 'DEO', 'Group II', 0.87, 0.2, 11]];
+  const newForm = [['Oil Code', 'Material', '% by weight'], ['NEW_Bulk', 'SN 500', 90], ['NEW_Bulk', 'V 255', 10]];
+  const newSkus = [['Brand', 'Oil Code', 'Pack', 'SKU description', 'HSN', 'GST %'],
+    ['Camp', 'NEW_Bulk', '1 Ltr Pet', 'Camp Example - 1 LTR', 27101980, 18]];
+  const margins = [['Margin', 'Scope', 'Target', 'New value'], ['Camp', 'Pack', '210 Ltr', 8],
+    ['', '', '', ''], ['Scope: All, Brand, Product, Pack or SKU.', '', '', '']];
+  download('Cost_update_template.xlsx', buildXlsx([
+    { name: 'Raw Materials', rows: mats }, { name: 'Packing Costs', rows: packs },
+    { name: 'New Packs', rows: newPacks }, { name: 'New Products', rows: newProducts },
+    { name: 'New Formulations', rows: newForm }, { name: 'New SKUs', rows: newSkus },
+    { name: 'Margins', rows: margins }]));
+}
+
+async function handleUpload(file) {
+  const out = { changes: [], errors: [], file: file.name };
+  try {
+    const sheets = await readXlsx(await file.arrayBuffer());
+    const by = {}; sheets.forEach(sh => { const k = classifySheet(sh.name); if (k && !by[k]) by[k] = sh; });
+
+    /* when was this file taken out of the app? the Read me sheet carries it */
+    const readmeSheet = sheets.find(sh => /read ?me/i.test(sh.name));
+    let fileStamp = null, fileDate = null;
+    if (readmeSheet) {
+      for (const row of readmeSheet.rows) {
+        for (const cell of row) {
+          const m = String(cell == null ? '' : cell).match(/taken from the app on\s+(.+)$/i);
+          if (m) { fileStamp = m[1].trim(); fileDate = parseStamp(fileStamp); }
+        }
+        if (fileDate) break;
+      }
+    }
+    out.fileStamp = fileStamp;
+    const lastChange = lastChangeTime();
+    if (fileDate && lastChange && fileDate.getTime() < lastChange - 1000) {
+      const since = (state.audit || []).filter(a => { const d = parseStamp(a.ts); return d && d.getTime() > fileDate.getTime(); });
+      out.stale = { fileStamp, lastChange: new Date(lastChange).toLocaleString('en-IN', { hour12: false }),
+        hours: ((lastChange - fileDate.getTime()) / 3600000).toFixed(1), since: since.slice(0, 12), count: since.length };
+    }
+    const idx = (hdr, re) => hdr.findIndex(h => re.test(norm(h)));
+
+    /* --- raw materials: header-driven so both the template and a downloaded master work --- */
+    if (by.MAT) {
+      const hdr = by.MAT.rows[0] || [];
+      const iMat = Math.max(0, idx(hdr, /material/));
+      const iNew = idx(hdr, /new price/);
+      const iPrice = idx(hdr, /^price|current price|price rs/);
+      const iDen = idx(hdr, /density/), iTr = idx(hdr, /transport/), iBasis = idx(hdr, /basis/);
+      by.MAT.rows.slice(1).forEach(r => {
+        const name = r[iMat]; if (name == null || name === '') return;
+        let val = iNew >= 0 && isNum(r[iNew]) ? r[iNew] : (iPrice >= 0 && isNum(r[iPrice]) ? r[iPrice] : null);
+        if (val == null) return;
+        const m = DB.materials.find(x => norm(x.name) === norm(name));
+        if (!m) {
+          const density = iDen >= 0 && isNum(r[iDen]) ? r[iDen] : 1;
+          const tr = iTr >= 0 && isNum(r[iTr]) ? r[iTr] : 0;
+          const basis = iBasis >= 0 && /kg/.test(norm(r[iBasis])) ? 'KG' : 'L';
+          out.changes.push({ kind: 'NEWMAT', name: String(name).trim(), price: val, density, transport: tr, basis,
+            label: String(name).trim(), field: 'New material', from: null, to: val });
+          return;
+        }
+        const cur = state.matPrice[m.id] != null ? state.matPrice[m.id] : m.price;
+        if (near(cur, val)) return;
+        out.changes.push({ kind: 'MAT', id: m.id, label: m.name, field: 'Price', from: cur, to: val });
+      });
+    }
+
+    /* --- pack component prices --- */
+    if (by.PACKCOST) {
+      const hdr = by.PACKCOST.rows[0] || [];
+      const iLbl = Math.max(0, idx(hdr, /pack/));
+      const f = [['cp', idx(hdr, /container/)], ['capp', idx(hdr, /cap/)], ['lp', idx(hdr, /label/)], ['ctp', idx(hdr, /carton/)]];
+      by.PACKCOST.rows.slice(1).forEach(r => {
+        const label = r[iLbl]; if (label == null || label === '') return;
+        const p = DB.packs.find(x => norm(x.label) === norm(label)) || DB.packs.find(x => norm(x.label).indexOf(norm(label)) === 0);
+        if (!p) { out.errors.push('Pack not found: ' + label); return; }
+        f.forEach(([key, i]) => {
+          if (i < 0 || !isNum(r[i])) return;
+          const cur = (state.packPrice[p.id] && state.packPrice[p.id][key] != null) ? state.packPrice[p.id][key] : p[key];
+          if (near(cur, r[i])) return;
+          out.changes.push({ kind: 'PACK', id: p.id, field: key, label: p.label + ' — ' + ({ cp: 'Container', capp: 'Cap', lp: 'Label', ctp: 'Carton' })[key], from: cur, to: r[i] });
+        });
+      });
+    }
+
+    /* --- packs: new ones, or changes to an existing one --- */
+    if (by.PACK) {
+      const hdr = by.PACK.rows[0] || [];
+      const iLbl = Math.max(0, idx(hdr, /pack/));
+      const iLit = idx(hdr, /litres/), iLpc = idx(hdr, /per ctn|carton/);
+      const qty = [idx(hdr, /container qty/), idx(hdr, /container price/), idx(hdr, /cap qty/), idx(hdr, /cap price/),
+        idx(hdr, /label qty/), idx(hdr, /label price/), idx(hdr, /carton qty/), idx(hdr, /carton price/)];
+      by.PACK.rows.slice(1).forEach(r => {
+        const label = r[iLbl]; if (label == null || label === '') return;
+        const nums = qty.map(i => i >= 0 && isNum(r[i]) ? r[i] : null);
+        const existing = DB.packs.find(x => norm(x.label) === norm(label));
+        if (existing) {
+          const keys = ['cq', 'cp', 'capq', 'capp', 'lq', 'lp', 'ctq', 'ctp'];
+          const PRICE_KEYS = ['cp', 'capp', 'lp', 'ctp'];
+          const NAMES = { cp: 'Container', capp: 'Cap', lp: 'Label', ctp: 'Carton' };
+          keys.forEach((k, j) => {
+            if (nums[j] == null) return;
+            // when a Packing Costs sheet is present it is the authority for prices
+            if (by.PACKCOST && PRICE_KEYS.includes(k)) return;
+            const cur = (state.packPrice[existing.id] && state.packPrice[existing.id][k] != null) ? state.packPrice[existing.id][k] : existing[k];
+            if (near(cur, nums[j])) return;
+            out.changes.push({ kind: 'PACK', id: existing.id, field: k, label: existing.label + ' — ' + (NAMES[k] || k), from: cur, to: nums[j] });
+          });
+          if (iLit >= 0 && isNum(r[iLit]) && !near(existing.litres, r[iLit]))
+            out.changes.push({ kind: 'PACKLIT', id: existing.id, label: existing.label, field: 'Litres', from: existing.litres, to: r[iLit] });
+          if (iLpc >= 0 && isNum(r[iLpc]) && !near(existing.lpc, r[iLpc]))
+            out.changes.push({ kind: 'PACKLPC', id: existing.id, label: existing.label, field: 'Ltrs per ctn', from: existing.lpc, to: r[iLpc] });
+          return;
+        }
+        const litres = iLit >= 0 ? r[iLit] : null, lpc = iLpc >= 0 ? r[iLpc] : null;
+        if (!isNum(litres) || litres <= 0) { out.errors.push('New pack needs litres: ' + label); return; }
+        if (!isNum(lpc) || lpc <= 0) { out.errors.push('New pack needs litres per carton: ' + label); return; }
+        out.changes.push({ kind: 'NEWPACK', label: String(label).trim(), field: 'New pack', from: null, to: litres,
+          pack: { label: String(label).trim(), key: String(label).trim(), litres, lpc,
+            cq: nums[0] || 0, cp: nums[1] || 0, capq: nums[2] || 0, capp: nums[3] || 0,
+            lq: nums[4] || 0, lp: nums[5] || 0, ctq: nums[6] || 0, ctp: nums[7] || 0 } });
+      });
+    }
+
+    /* --- products: new ones, or changes to an existing one --- */
+    const formRows = by.FORM ? by.FORM.rows.slice(1) : [];
+    const newCodes = [];
+    if (by.PROD) {
+      const hdr = by.PROD.rows[0] || [];
+      const iCode = Math.max(0, idx(hdr, /oil code/)), iDesc = idx(hdr, /description/), iCat = idx(hdr, /category/),
+            iGrp = idx(hdr, /group/), iDen = idx(hdr, /density/), iLoss = idx(hdr, /loss/), iConv = idx(hdr, /conversion/);
+      by.PROD.rows.slice(1).forEach(r => {
+        const code = r[iCode]; if (code == null || code === '') return;
+        const density = iDen >= 0 ? r[iDen] : null;
+        if (!isNum(density) || density <= 0) { out.errors.push('Product needs a density: ' + code); return; }
+        const loss = iLoss >= 0 && isNum(r[iLoss]) ? (r[iLoss] <= 0.05 ? r[iLoss] : r[iLoss] / 100) : null;
+        const conv = iConv >= 0 && isNum(r[iConv]) ? r[iConv] : null;
+        const existing = DB.grades.find(x => norm(x.code) === norm(code));
+        const form = []; const seen = new Set();
+        formRows.forEach(fr => {
+          if (fr[0] == null || norm(fr[0]) !== norm(code)) return;
+          const matName = String(fr[1] == null ? '' : fr[1]).trim();
+          if (!matName || seen.has(norm(matName))) return;
+          seen.add(norm(matName));
+          const known = DB.materials.some(x => norm(x.name) === norm(matName)) ||
+                        out.changes.some(c => c.kind === 'NEWMAT' && norm(c.name) === norm(matName));
+          if (!known) { out.errors.push('Material not found for ' + code + ': ' + matName); return; }
+          if (!isNum(fr[2])) return;
+          form.push([matName, fr[2]]);
+        });
+        // decide once per product whether the sheet is in percent or in fractions
+        const rawTotal = form.reduce((a, f) => a + f[1], 0);
+        if (rawTotal > 1.5) form.forEach(f => { f[1] = f[1] / 100; });
+        const total = form.reduce((a, f) => a + f[1], 0);
+        if (form.length && Math.abs(total - 1) > 0.001) {
+          out.errors.push('Formulation for ' + code + ' totals ' + (total * 100).toFixed(2) + '% — it must be 100%'); return;
+        }
+        if (!existing) {
+          if (!form.length) { out.errors.push('New product ' + code + ' has no formulation'); return; }
+          newCodes.push(String(code).trim());
+          out.changes.push({ kind: 'NEWGRADE', label: String(code).trim(), field: 'New product', from: null, to: form.length,
+            grade: { code: String(code).trim(), desc: (iDesc >= 0 ? r[iDesc] : '') || '', cat: (iCat >= 0 ? r[iCat] : '') || '',
+              grp: (iGrp >= 0 ? r[iGrp] : '') || '', density, loss: loss == null ? 0.002 : loss,
+              conv: conv == null ? 0 : conv, form } });
+          return;
+        }
+        // existing product — record only what actually differs
+        const diffs = [];
+        if (iDesc >= 0 && r[iDesc] != null && norm(r[iDesc]) !== norm(existing.desc)) diffs.push(['desc', 'Description', existing.desc, r[iDesc]]);
+        if (iCat >= 0 && r[iCat] != null && norm(r[iCat]) !== norm(existing.cat)) diffs.push(['cat', 'Category', existing.cat, r[iCat]]);
+        if (iGrp >= 0 && r[iGrp] != null && norm(r[iGrp]) !== norm(existing.grp)) diffs.push(['grp', 'Base oil group', existing.grp, r[iGrp]]);
+        if (!near(density, existing.density)) diffs.push(['density', 'Density', existing.density, density]);
+        if (loss != null && !near(loss, existing.loss)) diffs.push(['loss', 'Process loss %', +(existing.loss * 100).toFixed(3), +(loss * 100).toFixed(3)]);
+        if (conv != null && !near(conv, existing.conv)) diffs.push(['conv', 'Conversion Rs/L', existing.conv, conv]);
+        if (form.length) {
+          const old = existing.form.map(([mid, pct]) => [norm((DB.materials.find(m => m.id === mid) || {}).name), pct]);
+          const same = old.length === form.length && form.every(([n, p]) => {
+            const o = old.find(x => x[0] === norm(n)); return o && near(o[1], p);
+          });
+          if (!same) diffs.push(['form', 'Formulation', old.length + ' materials', form.length + ' materials']);
+        }
+        diffs.forEach(([field, label, from, to]) => out.changes.push({
+          kind: field === 'form' ? 'UPDGRADEFORM' : 'UPDGRADE', id: existing.id, field, label: existing.code + ' — ' + label,
+          from: typeof from === 'number' ? from : String(from), to: typeof to === 'number' ? to : String(to), form: field === 'form' ? form : undefined }));
+      });
+    }
+
+    /* --- SKUs: new ones, or changes to an existing one --- */
+    if (by.SKU) {
+      const hdr = by.SKU.rows[0] || [];
+      const iB = Math.max(0, idx(hdr, /brand/)), iC = idx(hdr, /oil code/), iP = idx(hdr, /pack/),
+            iD = idx(hdr, /description|sku/), iH = idx(hdr, /hsn/), iG = idx(hdr, /gst/);
+      by.SKU.rows.slice(1).forEach(r => {
+        const brand = r[iB], code = r[iC], packLabel = r[iP], desc = r[iD];
+        if (brand == null || brand === '') return;
+        if (!['camp', 'ciifrol', 'gobyk'].includes(norm(brand))) { out.errors.push('Unknown brand: ' + brand); return; }
+        if (desc == null || desc === '') { out.errors.push('SKU needs a description (' + brand + ')'); return; }
+        const g = DB.grades.find(x => norm(x.code) === norm(code));
+        const p = DB.packs.find(x => norm(x.label) === norm(packLabel));
+        const gid = g ? g.id : 'NEW:' + String(code).trim();
+        const pid = p ? p.id : 'NEW:' + String(packLabel).trim();
+        if (!g && !newCodes.some(c => norm(c) === norm(code))) { out.errors.push('Product not found for SKU ' + desc + ': ' + code); return; }
+        if (!p && !out.changes.some(c => c.kind === 'NEWPACK' && norm(c.pack.label) === norm(packLabel))) {
+          out.errors.push('Pack not found for SKU ' + desc + ': ' + packLabel); return;
+        }
+        const hsn = iH >= 0 && isNum(r[iH]) ? r[iH] : 27101980;
+        const gst = iG >= 0 && isNum(r[iG]) ? (r[iG] >= 1 ? r[iG] / 100 : r[iG]) : 0.18;
+        const existing = DB.skus.find(x => norm(x.desc) === norm(desc));
+        if (!existing) {
+          out.changes.push({ kind: 'NEWSKU', label: String(desc).trim(), field: 'New SKU', from: null, to: 1,
+            sku: { brand: String(brand).trim(), desc: String(desc).trim(), grade: gid, pack: pid, hsn, gst } });
+          return;
+        }
+        const diffs = [];
+        if (norm(existing.brand) !== norm(brand)) diffs.push(['brand', 'Brand', existing.brand, brand]);
+        if (typeof gid === 'number' && existing.grade !== gid) diffs.push(['grade', 'Oil code', (DB.grades.find(x => x.id === existing.grade) || {}).code, code]);
+        if (typeof pid === 'number' && existing.pack !== pid) diffs.push(['pack', 'Pack', (DB.packs.find(x => x.id === existing.pack) || {}).label, packLabel]);
+        if (!near(existing.hsn, hsn)) diffs.push(['hsn', 'HSN', existing.hsn, hsn]);
+        if (!near(existing.gst, gst)) diffs.push(['gst', 'GST %', +(existing.gst * 100).toFixed(2), +(gst * 100).toFixed(2)]);
+        diffs.forEach(([field, label, from, to]) => out.changes.push({
+          kind: 'UPDSKU', id: existing.id, field, label: existing.desc + ' — ' + label, from, to,
+          raw: field === 'gst' ? gst : field === 'hsn' ? hsn : field === 'grade' ? gid : field === 'pack' ? pid : to }));
+      });
+    }
+
+    /* --- margins --- */
+    if (by.MARGIN) {
+      const hdr = by.MARGIN.rows[0] || [];
+      const iT = Math.max(0, idx(hdr, /margin/)), iS = idx(hdr, /scope/), iTar = idx(hdr, /target/), iV = idx(hdr, /value|new value/);
+      by.MARGIN.rows.slice(1).forEach(r => {
+        const type = norm(r[iT]), scopeRaw = norm(r[iS]), target = r[iTar];
+        const val = iV >= 0 ? r[iV] : r[3];
+        if (!type || !scopeRaw || !isNum(val)) return;
+        const mtype = type.startsWith('up') ? 'UPLABS' : type.startsWith('camp') ? 'CAMP' : null;
+        if (!mtype) { out.errors.push('Margin type not understood: ' + r[iT]); return; }
+        const rule = { id: 0, type: mtype, value: val, seq: 0, from: new Date().toISOString().slice(0, 10), reason: 'Excel upload' };
+        if (scopeRaw === 'all' || scopeRaw === 'universal' || scopeRaw === 'every sku') rule.scope = 'GLOBAL';
+        else if (scopeRaw === 'brand') { rule.scope = 'BRAND'; rule.brand = String(target || '').trim(); }
+        else if (scopeRaw === 'product') {
+          const g = DB.grades.find(x => norm(x.code) === norm(target));
+          if (!g && !newCodes.some(c => norm(c) === norm(target))) { out.errors.push('Product not found: ' + target); return; }
+          rule.scope = 'PRODUCT'; rule.grade = g ? g.id : ('NEW:' + String(target).trim());
+        } else if (scopeRaw === 'pack') {
+          const p = DB.packs.find(x => norm(x.label) === norm(target)) || DB.packs.find(x => norm(x.label).indexOf(norm(target)) === 0);
+          if (!p && !out.changes.some(c => c.kind === 'NEWPACK' && norm(c.pack.label) === norm(target))) { out.errors.push('Pack not found: ' + target); return; }
+          rule.scope = 'PACK'; rule.pack = p ? p.id : ('NEW:' + String(target).trim());
+        } else if (scopeRaw === 'sku') {
+          const sk = DB.skus.find(x => norm(x.desc) === norm(target));
+          if (!sk) { out.errors.push('SKU not found: ' + target); return; }
+          rule.scope = 'SKU'; rule.sku = sk.id;
+        } else { out.errors.push('Scope not understood: ' + r[iS]); return; }
+        const probe = { brand: rule.brand, grade: typeof rule.grade === 'number' ? rule.grade : -1,
+          pack: typeof rule.pack === 'number' ? rule.pack : -1, id: rule.sku };
+        const current = E.margin(mtype, probe, ctxBase()).value;
+        if (near(current, val)) return;
+        out.changes.push({ kind: 'MARGIN', rule, field: 'Value', label: (mtype === 'UPLABS' ? 'Uplabs' : 'Camp') + ' margin — ' + scopeLabel(rule), from: current, to: val });
+      });
+    }
+
+    const seenPack = new Set();
+    out.changes = out.changes.filter(c => {
+      if (c.kind !== 'PACK') return true;
+      const k = c.id + '|' + c.field;
+      if (seenPack.has(k)) return false;
+      seenPack.add(k); return true;
+    });
+    if (!Object.keys(by).length) out.errors.push('No recognisable sheet found. Use the template or a downloaded master.');
+  } catch (err) { out.errors.push(err.message || String(err)); }
+  window.__upload = out;
+  window.__staleOK = false;
+  route();
+}
+
+function applyUpload() {
+  if (!allowed('upload')) return;
+  window.__staleOK = false;
+  const u = window.__upload; if (!u || !u.changes.length) return;
+  const lines = [];
+  const nextId = arr => arr.reduce((a, x) => Math.max(a, x.id), 0) + 1;
+
+  u.changes.filter(c => c.kind === 'NEWMAT').forEach(c => {
+    const id = nextId(DB.materials);
+    DB.materials.push({ id, name: c.name, price: c.price, basis: c.basis, density: c.density, transport: c.transport, landed: 0 });
+    lines.push('New raw material ' + c.name + ' at Rs ' + money(c.price));
+    audit('material', c.name, 'New material', '', 'Rs ' + money(c.price), 'Excel upload', 'Added from ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'NEWPACK').forEach(c => {
+    const id = nextId(DB.packs);
+    DB.packs.push(Object.assign({ id }, c.pack));
+    lines.push('New pack ' + c.pack.label + ' (' + c.pack.litres + ' L)');
+    audit('pack_size', c.pack.label, 'New pack', '', c.pack.litres + ' L', 'Excel upload', 'Added from ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'PACKLIT').forEach(c => {
+    const p = DB.packs.find(x => x.id === c.id); p.litres = c.to;
+    lines.push(c.label + ' litres ' + c.from + ' to ' + c.to);
+    audit('pack_size', c.label, 'Litres', c.from, c.to, 'Excel upload', 'Uploaded in ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'PACKLPC').forEach(c => {
+    const p = DB.packs.find(x => x.id === c.id); p.lpc = c.to;
+    lines.push(c.label + ' litres per carton ' + c.from + ' to ' + c.to);
+    audit('pack_size', c.label, 'Ltrs per ctn', c.from, c.to, 'Excel upload', 'Uploaded in ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'NEWGRADE').forEach(c => {
+    const id = nextId(DB.grades);
+    const form = c.grade.form.map(([name, pct]) => { const m = DB.materials.find(x => norm(x.name) === norm(name)); return m ? [m.id, pct] : null; }).filter(Boolean);
+    DB.grades.push({ id, code: c.grade.code, desc: c.grade.desc, cat: c.grade.cat, grp: c.grade.grp,
+      density: c.grade.density, loss: c.grade.loss, conv: c.grade.conv, form });
+    lines.push('New product ' + c.grade.code + ' with ' + form.length + ' materials');
+    audit('grade', c.grade.code, 'New product', '', c.grade.desc || c.grade.code, 'Excel upload', 'Added from ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'UPDGRADE' || c.kind === 'UPDGRADEFORM').forEach(c => {
+    const g = DB.grades.find(x => x.id === c.id); if (!g) return;
+    if (c.kind === 'UPDGRADEFORM') {
+      g.form = c.form.map(([name, pct]) => { const m = DB.materials.find(x => norm(x.name) === norm(name)); return m ? [m.id, pct] : null; }).filter(Boolean);
+    } else if (c.field === 'loss') g.loss = c.to / 100;
+    else g[c.field] = c.to;
+    lines.push(c.label + ': ' + c.from + ' to ' + c.to);
+    audit('grade', c.label, c.field, c.from, c.to, 'Excel upload', 'Uploaded in ' + u.file);
+  });
+  const resolveGrade = g => typeof g === 'number' ? g : (DB.grades.find(x => norm(x.code) === norm(String(g).replace('NEW:', ''))) || {}).id;
+  const resolvePack = p => typeof p === 'number' ? p : (DB.packs.find(x => norm(x.label) === norm(String(p).replace('NEW:', ''))) || {}).id;
+  u.changes.filter(c => c.kind === 'NEWSKU').forEach(c => {
+    const id = nextId(DB.skus);
+    DB.skus.push({ id, code: 'SKU' + String(id).padStart(4, '0'), desc: c.sku.desc, brand: c.sku.brand,
+      grade: resolveGrade(c.sku.grade), pack: resolvePack(c.sku.pack), hsn: c.sku.hsn, gst: c.sku.gst });
+    lines.push('New SKU ' + c.sku.desc + ' (' + c.sku.brand + ')');
+    audit('sku', c.sku.desc, 'New SKU', '', c.sku.brand, 'Excel upload', 'Added from ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'UPDSKU').forEach(c => {
+    const s = DB.skus.find(x => x.id === c.id); if (!s) return;
+    s[c.field] = c.raw !== undefined ? c.raw : c.to;
+    lines.push(c.label + ': ' + c.from + ' to ' + c.to);
+    audit('sku', c.label, c.field, c.from, c.to, 'Excel upload', 'Uploaded in ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'MAT').forEach(c => {
+    state.matPrice[c.id] = c.to;
+    lines.push(M(c.id).name + ' price Rs ' + money(c.from) + ' to Rs ' + money(c.to));
+    audit('material', c.label, 'Price', 'Rs ' + money(c.from), 'Rs ' + money(c.to), 'Excel upload', 'Uploaded in ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'PACK').forEach(c => {
+    state.packPrice = state.packPrice || {};
+    state.packPrice[c.id] = state.packPrice[c.id] || {};
+    state.packPrice[c.id][c.field] = c.to;
+    lines.push(c.label + ' Rs ' + money(c.from) + ' to Rs ' + money(c.to));
+    audit('pack_size', c.label, 'Price', 'Rs ' + money(c.from), 'Rs ' + money(c.to), 'Excel upload', 'Uploaded in ' + u.file);
+  });
+  u.changes.filter(c => c.kind === 'MARGIN').forEach(c => {
+    const r = Object.assign({}, c.rule, { id: ++state.seq, seq: state.seq });
+    r.grade = typeof r.grade === 'number' ? r.grade : resolveGrade(r.grade);
+    r.pack = typeof r.pack === 'number' ? r.pack : resolvePack(r.pack);
+    state.marginRules.push(r);
+    lines.push(c.label + ' Rs ' + money(c.from) + ' to Rs ' + money(c.to));
+    audit('margin_rule', c.label, 'Value', 'Rs ' + money(c.from), 'Rs ' + money(c.to), scopeLabel(r), 'Uploaded in ' + u.file);
+  });
+
+  saveMaster();
+  const v = newVersion('Excel upload — ' + u.file, lines.length + ' change' + (lines.length === 1 ? '' : 's'), lines);
+  audit('upload', u.file, 'Version ' + v.id, '', v.summary, 'Excel upload', 'Applied from ' + u.file);
+  save();
+  window.__upload = null;
+  alert('Version ' + v.id + ' applied: ' + v.summary + '.');
+  route();
+}
+
+function fmtVal(v, field) {
+  const small = /density|loss|litres|ctn/i.test(String(field || ''));
+  return small ? Number(v).toFixed(4) : money(v);
+}
+function viewUpload() {
+  if (!allowed('upload')) return denied();
+  const u = window.__upload;
+  let preview = '';
+  if (u) {
+    const badge = c => ['NEWMAT', 'NEWPACK', 'NEWGRADE', 'NEWSKU'].includes(c.kind) ? ' <span class="tag">new</span>' :
+      c.kind.startsWith('UPD') ? ' <span class="tag grey">update</span>' : '';
+    const FNAME = { cp: 'Container', capp: 'Cap', lp: 'Label', ctp: 'Carton', cq: 'Container qty', capq: 'Cap qty',
+      lq: 'Label qty', ctq: 'Carton qty', density: 'Density', loss: 'Process loss %', conv: 'Conversion Rs/L',
+      desc: 'Description', cat: 'Category', grp: 'Base oil group', form: 'Formulation', brand: 'Brand',
+      grade: 'Oil code', pack: 'Pack', hsn: 'HSN', gst: 'GST %' };
+    const isNew = c => ['NEWMAT', 'NEWPACK', 'NEWGRADE', 'NEWSKU'].includes(c.kind);
+    const rows = u.changes.map(c => {
+      const fname = FNAME[c.field] || c.field;
+      const nowCell = isNew(c) ? '—' : (typeof c.from === 'number' ? fmtVal(c.from, c.field) : esc(c.from));
+      const fileCell = isNew(c)
+        ? (c.kind === 'NEWGRADE' ? c.to + ' materials' : c.kind === 'NEWPACK' ? c.to + ' L' : c.kind === 'NEWMAT' ? 'Rs ' + money(c.to) : 'new')
+        : (typeof c.to === 'number' ? fmtVal(c.to, c.field) : esc(c.to));
+      const delta = (!isNew(c) && typeof c.from === 'number' && typeof c.to === 'number')
+        ? ((c.to - c.from) > 0 ? '+' : '') + fmtVal(c.to - c.from, c.field) : '';
+      const cls = (!isNew(c) && typeof c.from === 'number') ? (c.to > c.from ? 'down' : 'up') : '';
+      return `<tr><td>${esc(c.label)}${badge(c)}</td><td>${esc(fname)}</td>
+        <td class="r">${nowCell}</td><td class="r"><b>${fileCell}</b></td><td class="r ${cls}">${delta}</td></tr>`;
+    }).join('');
+    const nNew = u.changes.filter(c => ['NEWMAT', 'NEWPACK', 'NEWGRADE', 'NEWSKU'].includes(c.kind)).length;
+    const warn = u.stale ? `<div class="stale">
+        <b>This file is older than your last change.</b>
+        <p>The file was taken on ${esc(u.stale.fileStamp)}. This copy was changed after that, most recently at ${esc(u.stale.lastChange)} —
+        ${esc(u.stale.hours)} hours later. Applying it will push the file's older values back over newer ones.</p>
+        ${u.stale.count ? `<p class="small">Changed in the app since that download:</p>
+        <ul class="changes">${u.stale.since.map(a => `<li>${esc(a.table)} — ${esc(a.record)}: ${esc(a.old || '—')} → ${esc(a.new)} <i>(${esc(a.ts)})</i></li>`).join('')}
+        ${u.stale.count > u.stale.since.length ? `<li>…and ${u.stale.count - u.stale.since.length} more</li>` : ''}</ul>` : ''}
+        <p class="small">Download a fresh master and edit that instead. If you are certain this file is the one you want, apply it deliberately below.</p>
+      </div>` : '';
+    preview = `<div class="card pad">
+      ${warn}
+      <h3>${esc(u.file)}</h3>
+      ${u.changes.length ? `<p>${u.changes.length} change${u.changes.length > 1 ? 's' : ''} found${nNew ? ', including ' + nNew + ' addition' + (nNew > 1 ? 's' : '') : ''}. Nothing has been applied yet.</p>
+        <table class="grid compact"><thead><tr><th>Record</th><th>Field</th><th class="r">Now</th><th class="r">In the file</th><th class="r">Change</th></tr></thead>
+        <tbody>${rows}</tbody></table>
+        <div class="bar" style="margin-top:14px">${u.stale && !window.__staleOK
+          ? `<button class="btn danger" data-act="staleok">I understand — apply anyway</button>`
+          : `<button class="btn" data-act="applyupload">Apply as version ${(state.versions.length ? state.versions[0].id : 0) + 1}</button>`}
+        <button class="btn ghost" data-act="cancelupload">Discard</button></div>`
+      : '<p class="muted">No differences — the file matches the app exactly. That is what you want when re-uploading a downloaded master you have not edited.</p>'}
+      ${u.errors.length ? `<h4 style="margin-top:16px">Not applied</h4><ul class="changes">${u.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ''}
+    </div>`;
+  }
+  return shell('Upload and download', `
+    <p class="muted small">Download the current master, work on it, and upload it back. The download already contains every change made in the app, so you can never be working on a stale sheet.</p>
+    <div class="bar">
+      <button class="btn" data-act="exportmaster">Download current master</button>
+      <button class="btn ghost" data-act="template">Blank template</button>
+      <label class="btn ghost" style="display:inline-block">Upload Excel<input type="file" id="upfile" accept=".xlsx" style="display:none"></label>
+      ${u ? '<button class="btn ghost" data-act="cancelupload">Start again</button>' : ''}
+    </div>
+    ${preview}
+    <div class="card pad">
+      <h3>Why download rather than keep the old file</h3>
+      <p class="small">Your original workbook is a snapshot of one day. Every price changed since then — in the app or by a later upload — is missing from it, and you would only find out by checking every line.</p>
+      <p class="small">The download is built from the app at the moment you click, so it carries every change with it. Upload it back after editing and only the rows you actually altered are applied; untouched rows are ignored.</p>
+      <h4 style="margin-top:16px">What is in the file</h4>
+      <p class="small"><b>Raw Materials</b>, <b>Packing Costs</b>, <b>Packs</b>, <b>Products</b>, <b>Formulations</b>, <b>SKUs</b> and <b>Margins</b> are the working sheets — edit these and upload. <b>Price List</b> and <b>Change Master</b> are for reference and are ignored on upload.</p>
+    </div>`, { print: true });
+}
+
+/* ---------------- sync between copies ---------------- */
+function changesOnDevice() {
+  return {
+    materials: Object.keys(state.matPrice || {}).length,
+    packs: Object.keys(state.packPrice || {}).length,
+    margins: (state.marginRules || []).length - 2,
+    audit: (state.audit || []).length
+  };
+}
+function exportChanges() {
+  if (!allowed('sync')) return;
+  const payload = {
+    app: 'camp-costing', version: 1, exported: nowStamp(),
+    device: (navigator.userAgent || '').slice(0, 60),
+    matPrice: state.matPrice || {}, packPrice: state.packPrice || {},
+    marginRules: state.marginRules || [], audit: state.audit || []
+  };
+  const d = new Date();
+  const stamp = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '_' +
+    String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+  download('Cost_changes_' + stamp + '.json', new TextEncoder().encode(JSON.stringify(payload, null, 1)), 'application/json');
+}
+async function readChanges(file) {
+  const txt = await file.text();
+  let data;
+  try { data = JSON.parse(txt); } catch (e) { window.__sync = { error: 'That file is not a changes file exported by this app.' }; route(); return; }
+  if (!data || data.app !== 'camp-costing') { window.__sync = { error: 'That file is not a changes file exported by this app.' }; route(); return; }
+  const mine = { matPrice: state.matPrice || {}, packPrice: state.packPrice || {}, rules: state.marginRules || [] };
+  const fp = r => [r.type, r.scope, r.brand || '', r.grade || '', r.pack || '', r.sku || '', r.value].join('|');
+  const haveRules = new Set(mine.rules.map(fp));
+  const newMats = [], newPacks = [], newRules = [];
+  Object.entries(data.matPrice || {}).forEach(([id, v]) => {
+    const cur = mine.matPrice[id];
+    if (cur == null || Math.abs(cur - v) > 1e-9) newMats.push({ id: +id, from: cur, to: v });
+  });
+  Object.entries(data.packPrice || {}).forEach(([id, obj]) => {
+    Object.entries(obj).forEach(([f, v]) => {
+      const cur = mine.packPrice[id] && mine.packPrice[id][f];
+      if (cur == null || Math.abs(cur - v) > 1e-9) newPacks.push({ id: +id, field: f, from: cur, to: v });
+    });
+  });
+  (data.marginRules || []).forEach(r => { if (!haveRules.has(fp(r))) newRules.push(r); });
+  window.__sync = { file: file.name, exported: data.exported, newMats, newPacks, newRules, audit: data.audit || [] };
+  route();
+}
+function applySync() {
+  if (!allowed('sync')) return;
+  const s = window.__sync; if (!s || s.error) return;
+  let n = 0;
+  s.newMats.forEach(m => { state.matPrice[m.id] = m.to; n++;
+    audit('material', M(m.id).name, 'Price', m.from == null ? '(unset)' : 'Rs ' + money(m.from), 'Rs ' + money(m.to), 'Synced from another device', 'Merged from ' + s.file); });
+  s.newPacks.forEach(p => { state.packPrice = state.packPrice || {}; state.packPrice[p.id] = state.packPrice[p.id] || {};
+    state.packPrice[p.id][p.field] = p.to; n++;
+    audit('pack_size', P(p.id).label, p.field, p.from == null ? '(unset)' : 'Rs ' + money(p.from), 'Rs ' + money(p.to), 'Synced from another device', 'Merged from ' + s.file); });
+  s.newRules.forEach(r => { state.marginRules.push(Object.assign({}, r, { id: ++state.seq, seq: state.seq })); n++;
+    audit('margin_rule', scopeLabel(r), 'Value', '', 'Rs ' + money(r.value), scopeLabel(r), 'Merged from ' + s.file); });
+  // merge the other device's history so the change log stays complete
+  const seen = new Set(state.audit.map(a => [a.ts, a.table, a.record, a.field, a.new].join('|')));
+  (s.audit || []).forEach(a => { const k = [a.ts, a.table, a.record, a.field, a.new].join('|');
+    if (!seen.has(k)) { state.audit.push(a); seen.add(k); } });
+  state.audit.sort((a, b) => String(b.ts).localeCompare(String(a.ts)));
+  const slines = [
+    ...s.newMats.map(m => M(m.id).name + ' price to Rs ' + money(m.to)),
+    ...s.newPacks.map(p => P(p.id).label + ' ' + p.field + ' to Rs ' + money(p.to)),
+    ...s.newRules.map(r => (r.type === 'UPLABS' ? 'Uplabs' : 'Camp') + ' margin Rs ' + money(r.value) + ' — ' + scopeLabel(r))];
+  newVersion('Sync — ' + s.file, slines.length + ' change' + (slines.length === 1 ? '' : 's'), slines);
+  audit('sync', s.file, 'Summary', '', n + ' change' + (n === 1 ? '' : 's') + ' merged', 'Sync', 'From ' + (s.exported || 'another device'));
+  save(); window.__sync = null;
+  alert(n + ' change' + (n === 1 ? '' : 's') + ' merged into this copy.');
+  route();
+}
+function viewSync() {
+  if (!allowed('sync')) return denied();
+  const s = window.__sync;
+  const c = changesOnDevice();
+  let preview = '';
+  if (s && s.error) preview = `<div class="card pad"><h3>Could not read that file</h3><p class="muted">${esc(s.error)}</p></div>`;
+  else if (s) {
+    const rows = [
+      ...s.newMats.map(m => `<tr><td>${esc(M(m.id).name)}</td><td>Material price</td><td class="r">${m.from == null ? '—' : money(m.from)}</td><td class="r"><b>${money(m.to)}</b></td></tr>`),
+      ...s.newPacks.map(p => `<tr><td>${esc(P(p.id).label)}</td><td>${esc(p.field)}</td><td class="r">${p.from == null ? '—' : money(p.from)}</td><td class="r"><b>${money(p.to)}</b></td></tr>`),
+      ...s.newRules.map(r => `<tr><td>${esc(scopeLabel(r))}</td><td>${esc(r.type === 'UPLABS' ? 'Uplabs margin' : 'Camp margin')}</td><td class="r">—</td><td class="r"><b>${money(r.value)}</b></td></tr>`)
+    ].join('');
+    const n = s.newMats.length + s.newPacks.length + s.newRules.length;
+    preview = `<div class="card pad">
+      <h3>${esc(s.file)}</h3>
+      <p class="muted small">Exported ${esc(s.exported || 'unknown date')}.</p>
+      ${n ? `<p>${n} change${n === 1 ? '' : 's'} in that file are not in this copy.</p>
+        <table class="grid compact"><thead><tr><th>Record</th><th>What</th><th class="r">Here now</th><th class="r">From the file</th></tr></thead><tbody>${rows}</tbody></table>
+        <div class="bar" style="margin-top:14px"><button class="btn" data-act="applysync">Merge ${n} change${n === 1 ? '' : 's'} into this copy</button>
+        <button class="btn ghost" data-act="cancelsync">Discard</button></div>`
+      : '<p class="muted">This copy already has everything in that file. Nothing to merge.</p>'}
+    </div>`;
+  }
+  return shell('Sync', `
+    <p class="muted small">This app runs entirely on the device it is opened on. To move your work between a laptop, a phone and the hosted copy, export the changes here and merge them on the other side.</p>
+    <div class="stats four" style="margin-bottom:16px">
+      <div class="stat"><b>${c.materials}</b><span>Material prices changed</span></div>
+      <div class="stat"><b>${c.packs}</b><span>Pack costs changed</span></div>
+      <div class="stat"><b>${c.margins}</b><span>Margin overrides</span></div>
+      <div class="stat"><b>${c.audit}</b><span>Log entries</span></div>
+    </div>
+    <div class="bar">
+      <button class="btn" data-act="exportchanges">Export changes</button>
+      <label class="btn ghost" style="display:inline-block">Merge a changes file<input type="file" id="syncfile" accept=".json" style="display:none"></label>
+    </div>
+    ${preview}
+    <div class="card pad">
+      <h3>How this works, and what it is not</h3>
+      <p class="small">Export writes a small file holding every price you have changed, every margin override and the whole change log. Merging reads one back and applies only what this copy does not already have, so nothing is overwritten blindly.</p>
+      <p class="small">It is a deliberate, file-based exchange — you export, you carry the file, you merge. It is not live syncing: two copies do not update each other on their own, and there is no conflict resolution beyond "apply what is missing". Genuine two-way sync needs the hosted version with a shared database, which is the next step.</p>
+      <p class="small muted">Keep the exported file. It is also the safest backup of your work if a browser ever clears its local storage.</p>
+    </div>`, { print: true });
+}
+
+/* ---------------- change master ---------------- */
+function viewAudit() {
+  if (!allowed('audit')) return denied();
+  const vers = state.versions || [];
+  const vrows = vers.map(v => `<tr>
+      <td><b>v${v.id}</b></td><td>${esc(v.ts)}</td><td>${esc(v.source)}</td>
+      <td>${esc(v.summary)}</td><td class="r">${v.count}</td>
+      <td class="r"><button class="link" data-act="openver" data-id="${v.id}">${window.__ver === v.id ? 'hide' : 'show'}</button></td>
+    </tr>${window.__ver === v.id ? `<tr><td colspan="6" class="verlines"><ul class="changes">${v.lines.map(l => `<li>${esc(l)}</li>`).join('')}</ul></td></tr>` : ''}`).join('');
+  const rows = state.audit.map(a => `<tr><td>${esc(a.ts)}</td><td>${esc(a.user)}</td><td>${esc(a.table)}</td>
+    <td>${esc(a.record)}</td><td>${esc(a.field)}</td><td>${esc(a.old)}</td><td><b>${esc(a.new)}</b></td>
+    <td>${esc(a.scope || '')}</td><td>${esc(a.reason || '')}</td></tr>`).join('');
+  return shell('Change master', `
+    <p class="muted small">Every applied batch is a numbered version, and every individual edit is a line in the log below it. Only the Uplabs login can see this.</p>
+    <div class="bar"><span class="grow"></span><button class="btn ghost" data-act="auditxlsx">Download change master</button></div>
+    <div class="card"><table class="grid compact">
+      <thead><tr><th>Version</th><th>When</th><th>Source</th><th>Summary</th><th class="r">Changes</th><th></th></tr></thead>
+      <tbody>${vers.length ? vrows : '<tr><td colspan="6" class="pad muted">No versions yet. Upload a cost file, change a margin, or edit a price and it will appear here.</td></tr>'}</tbody>
+    </table></div>
+    <h3 style="margin:22px 0 8px;font-size:14px">Every change</h3>
+    <div class="card">${state.audit.length ? `<table class="grid compact">
+      <thead><tr><th>When</th><th>Who</th><th>Table</th><th>Record</th><th>Field</th><th>Old</th><th>New</th><th>Scope</th><th>Reason</th></tr></thead>
+      <tbody>${rows}</tbody></table>` : '<p class="muted pad">Nothing recorded yet.</p>'}</div>`);
+}
+
+
+/* ---------------- standalone costing workbooks (formula-linked) ---------------- */
+function coreSheets(gradeIds, packIds) {
+  const ctx = ctxBase();
+  const F = f => ({ f });
+  const grades = DB.grades.filter(g => gradeIds.includes(g.id));
+  const packs = DB.packs.filter(p => packIds.includes(p.id));
+  const usedMat = new Set();
+  grades.forEach(g => E.formulation(g.id, ctx).forEach(r => usedMat.add(r.mid)));
+  const mats = DB.materials.filter(m => usedMat.has(m.id));
+
+  const raw = [['Material', 'Price', 'Density', 'Inbound transport', 'Basis', 'Landed Rs/kg']];
+  mats.forEach(m => { const x = E.matOf(m, ctx); const r = raw.length + 1;
+    raw.push([m.name, x.price, x.density, x.transport, m.basis === 'KG' ? 'per kg' : 'per litre',
+      F(`IF(E${r}="per kg",B${r},B${r}/C${r})+D${r}`)]); });
+  const rawLast = raw.length;
+
+  const form = [['Oil Code', 'Material', '% by weight', 'Landed Rs/kg', 'Contribution Rs/kg']];
+  grades.forEach(g => { const b = E.blend(g.id, ctx);
+    b.lines.slice().sort((x, y) => y.pct - x.pct).forEach(l => { const r = form.length + 1;
+      form.push([g.code, l.mat.name, +(l.pct * 100).toFixed(4),
+        F(`IFERROR(INDEX('Raw Materials'!$F$2:$F$${rawLast},MATCH($B${r},'Raw Materials'!$A$2:$A$${rawLast},0)),0)`),
+        F(`C${r}/100*D${r}`)]); }); });
+  const formLast = form.length;
+
+  const prods = [['Oil Code', 'Description', 'Category', 'Base oil group', 'Density', 'Process loss %', 'Conversion Rs/L',
+    'Blend cost Rs/kg', 'RM cost Rs/L', 'Final bulk Rs/L']];
+  grades.forEach(g => { const b = E.blend(g.id, ctx); const r = prods.length + 1;
+    prods.push([g.code, g.desc, g.cat, g.grp, b.density, +(b.loss * 100).toFixed(3), b.conv,
+      F(`SUMIFS(Formulations!$E$2:$E$${formLast},Formulations!$A$2:$A$${formLast},$A${r})`),
+      F(`E${r}*H${r}`), F(`I${r}*(1+F${r}/100)+G${r}`)]); });
+  const prodLast = prods.length;
+
+  const pk = [['Pack', 'Litres', 'Ltrs per ctn', 'Container qty', 'Container price', 'Cap qty', 'Cap price',
+    'Label qty', 'Label price', 'Carton qty', 'Carton price', 'Cost per carton', 'Per litre']];
+  packs.forEach(p => { const o = (state.packPrice || {})[p.id] || {}; const r = pk.length + 1;
+    pk.push([p.label, p.litres, p.lpc, p.cq, o.cp != null ? o.cp : p.cp, p.capq, o.capp != null ? o.capp : p.capp,
+      p.lq, o.lp != null ? o.lp : p.lp, p.ctq, o.ctp != null ? o.ctp : p.ctp,
+      F(`D${r}*E${r}+F${r}*G${r}+H${r}*I${r}+J${r}*K${r}`), F(`L${r}/C${r}`)]); });
+  const packLast = pk.length;
+
+  return { sheets: [
+    { name: 'Raw Materials', rows: raw }, { name: 'Formulations', rows: form },
+    { name: 'Products', rows: prods, hiddenCols: [7] }, { name: 'Packs', rows: pk }],
+    rawLast, formLast, prodLast, packLast };
+}
+
+function exportTrace(skuId) {
+  if (!allowed('trace')) return;
+  const ctx = ctxBase();
+  const r = E.sku(skuId, ctx), s = r.sku, g = G(s.grade), p = P(s.pack);
+  const c = coreSheets([s.grade], [s.pack]);
+  const F = f => ({ f });
+
+  const rows = [['Cost trace — ' + s.desc], ['Brand', s.brand], ['Oil code', g.code], ['Pack', p.label],
+    ['HSN', s.hsn], ['GST %', +(s.gst * 100).toFixed(2)], ['Taken from the app on', nowStamp()], [],
+    ['Line', 'Value', 'How it is calculated']];
+  const R = { gst: 6 };
+  const put = (key, label, val, how) => { rows.push([label, val, how || '']); R[key] = rows.length; };
+
+  put('blend', 'Blend cost per kg',
+    F(`SUMIFS(Formulations!$E$2:$E$${c.formLast},Formulations!$A$2:$A$${c.formLast},"${g.code}")`),
+    'Sum of the contributions on the Formulations sheet');
+  put('dens', 'Density', r.blend.density, 'Lab measured, held on Products');
+  put('rmL', 'RM cost per litre', F(`B${R.blend}*B${R.dens}`), 'Blend cost per kg x density');
+  put('loss', 'Process loss %', +(r.blend.loss * 100).toFixed(3), '');
+  put('afterLoss', 'After loss', F(`B${R.rmL}*(1+B${R.loss}/100)`), '');
+  put('conv', 'Conversion Rs/L', r.blend.conv, 'Blending and transport charge');
+  put('bulk', 'Final bulk cost per litre', F(`B${R.afterLoss}+B${R.conv}`), '');
+  put('packL', 'Packing cost per litre',
+    F(`IFERROR(INDEX(Packs!$M$2:$M$${c.packLast},MATCH("${p.label}",Packs!$A$2:$A$${c.packLast},0)),0)`),
+    'Cost per carton divided by litres per carton, from Packs');
+  put('skuCost', 'SKU cost per litre', F(`B${R.bulk}+B${R.packL}`), 'Bulk plus packing');
+  put('upM', 'Uplabs margin', +r.upMargin.toFixed(2), 'Resolved by the app from the margin rules');
+  put('upBasic', 'Uplabs basic per litre', F(`B${R.skuCost}+B${R.upM}`), '');
+  put('gstL', 'GST per litre', F(`B${R.upBasic}*B${R.gst}/100`), '');
+  put('upInv', 'Uplabs invoice per litre', F(`B${R.upBasic}+B${R.gstL}`), '');
+  put('cpM', 'Camp margin', +r.cpMargin.toFixed(2), '');
+  put('campBasic', 'Camp basic per litre', F(`B${R.upBasic}+B${R.cpM}`), 'Margin added to the ex-GST basic, not to the invoice');
+  put('netL', 'Net per litre incl GST', F(`B${R.campBasic}*(1+B${R.gst}/100)`), '');
+  put('litres', 'Pack litres', p.litres, '');
+  put('netPack', 'Net per pack incl GST', F(`B${R.netL}*B${R.litres}`), '');
+  put('mrp', 'Suggested MRP',
+    F(`MROUND(B${R.netPack}*IF(B${R.litres}<=1,2.44,IF(B${R.litres}<=10,2.38,IF(B${R.litres}<=50,1.5,1.15))),IF(B${R.netPack}*IF(B${R.litres}<=1,2.44,IF(B${R.litres}<=10,2.38,IF(B${R.litres}<=50,1.5,1.15)))<1000,5,100))`),
+    'Landed pack price x markup band, rounded');
+
+  const sheets = [{ name: 'Cost Trace', rows }].concat(c.sheets);
+  download('Cost_trace_' + String(s.desc).replace(/[^A-Za-z0-9]+/g, '_').slice(0, 40) + '.xlsx', buildXlsx(sheets));
+}
+
+/* ---------------- exports ---------------- */
+function download(name, bytes, mime) {
+  const blob = new Blob([bytes], { type: mime || 'application/octet-stream' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function exportPrices(custId) {
+  if (!allowed('prices')) return;
+  const c = CUSTOMERS.find(x => x.id === custId);
+  const rows = [['SKU', 'Brand', 'Oil code', 'Pack', 'HSN', 'GST %', 'Basic per litre', 'GST per litre', 'Net per litre incl GST', 'Net per pack incl GST', 'Suggested MRP']];
+  E.all(ctxBase()).filter(r => r.sku.brand === c.brand).forEach(r => rows.push([
+    r.sku.desc, r.sku.brand, G(r.sku.grade).code, P(r.sku.pack).label, r.sku.hsn, 18,
+    +r.upBasic.toFixed(2), +(r.campInv - r.campBasic).toFixed(2), +r.campInv.toFixed(2), +r.packPrice.toFixed(2), r.mrp]));
+  download('Price_list_' + c.name.replace(/\s+/g, '_') + '.xlsx', buildXlsx([{ name: c.name.slice(0, 28), rows }]));
+}
+function formulationRows(gid, ctx) {
+  const g = G(gid), b = E.blend(gid, ctx);
+  const rows = [['Oil code', g.code], ['Description', g.desc], ['Category', g.cat], ['Base oil group', g.grp],
+    ['Density (lab)', b.density], ['Process loss %', +(b.loss * 100).toFixed(2)], ['Lubigen conversion Rs/L', b.conv], []];
+  rows.push(['Material', 'Basis', 'Density', 'Price', 'Landed Rs/kg', '% by weight', 'Contribution Rs/kg', 'Share %']);
+  b.lines.slice().sort((x, y) => y.contribution - x.contribution).forEach(l => rows.push([
+    l.mat.name, l.mat.basis === 'L' ? 'per litre' : 'per kg', l.mat.density, l.mat.price,
+    +l.landed.toFixed(2), +(l.pct * 100).toFixed(2), +l.contribution.toFixed(2), +(l.share * 100).toFixed(2)]));
+  rows.push(['Total', '', '', '', '', +(b.total * 100).toFixed(2), +b.kg.toFixed(2), 100]);
+  rows.push([]); rows.push(['Blend cost per kg', +b.kg.toFixed(2)]); rows.push(['RM cost per litre', +b.rmL.toFixed(2)]);
+  rows.push(['After loss', +b.afterLoss.toFixed(2)]); rows.push(['Conversion', b.conv]);
+  rows.push(['FINAL BULK COST Rs/L', +b.bulk.toFixed(2)]);
+  return rows;
+}
+function exportFormulations(mode, gid) {
+  if (!allowed('formulations')) return;
+  const ids = mode === 'one' ? [gid || (window.__grade || DB.grades[0].id)] : DB.grades.map(g => g.id);
+  const ctx = ctxBase();
+  const c = coreSheets(ids, []);
+  const idx = [['Formulation workbook — ' + nowStamp()], [],
+    ['Oil code', 'Description', 'Category', 'Density', 'SKUs fed', 'Final bulk Rs/L']]
+    .concat(ids.map(id => { const g = G(id), b = E.blend(id, ctx);
+      return [g.code, g.desc, g.cat, b.density, DB.skus.filter(s => s.grade === id).length, +b.bulk.toFixed(2)]; }));
+  download('Formulation_blocks_' + (mode === 'one' ? G(ids[0]).code : 'all') + '.xlsx',
+    buildXlsx([{ name: 'Index', rows: idx }].concat(c.sheets)));
+}
+
+function exportBulk() {
+  if (!allowed('bulk')) return;
+  const ctx = ctxBase();
+  const rows = [['Grade', 'Description', 'Blend cost Rs/kg', 'Density', 'RM cost Rs/L', 'Loss %', 'Conversion Rs/L', 'Final bulk Rs/L']];
+  DB.grades.forEach(g => { const b = E.blend(g.id, ctx);
+    rows.push([g.code, g.desc, +b.kg.toFixed(2), b.density, +b.rmL.toFixed(2), +(b.loss * 100).toFixed(2), b.conv, +b.bulk.toFixed(2)]); });
+  download('Bulk_costing.xlsx', buildXlsx([{ name: 'Bulk costing', rows }]));
+}
+function exportAudit() {
+  if (!allowed('audit')) return denied();
+  const vrows = [['Version', 'When', 'Source', 'Summary', 'Changes']];
+  (state.versions || []).forEach(v => vrows.push(['v' + v.id, v.ts, v.source, v.summary, v.count]));
+  vrows.push([]); vrows.push(['Version detail']); vrows.push(['Version', 'Line']);
+  (state.versions || []).forEach(v => v.lines.forEach(l => vrows.push(['v' + v.id, l])));
+  const lrows = [['When', 'Who', 'Table', 'Record', 'Field', 'Old', 'New', 'Scope', 'Reason']];
+  state.audit.forEach(a => lrows.push([a.ts, a.user, a.table, a.record, a.field, a.old, a.new, a.scope, a.reason]));
+  download('Change_master.xlsx', buildXlsx([{ name: 'Versions', rows: vrows }, { name: 'All changes', rows: lrows }]));
+}
+
+/* ---------------- margin wizard ---------------- */
+function openMarginWizard() {
+  if (!allowed('margins')) return;
+  const dlg = document.createElement('div');
+  dlg.className = 'overlay';
+  dlg.innerHTML = `<div class="modal">
+    <h2>Change a margin</h2>
+    <p class="muted small">Answer four questions and see what it does before it is applied.</p>
+    <label>Which margin</label>
+    <select id="w-type"><option value="UPLABS">Uplabs</option><option value="CAMP">Camp</option></select>
+    <label>New value, rupees per litre</label>
+    <input id="w-value" type="number" step="0.5" value="12">
+    <label>How widely does it apply</label>
+    <select id="w-scope">
+      <option value="GLOBAL">Universal — every SKU</option>
+      <option value="BRAND">A brand</option>
+      <option value="PRODUCT">A product — all its packs</option>
+      <option value="PACK">A pack size — across all products</option>
+      <option value="PRODUCT_PACK">One product at one pack size</option>
+      <option value="SKU">A single SKU</option>
+    </select>
+    <div id="w-targets"></div>
+    <label>Reason</label>
+    <input id="w-reason" placeholder="e.g. base oil rise, approved by management">
+    <div id="w-preview" class="preview"></div>
+    <div class="modalbar">
+      <button class="btn ghost" data-act="closewizard">Cancel</button>
+      <button class="btn" data-act="applywizard">Apply</button>
+    </div>
+  </div>`;
+  document.body.appendChild(dlg);
+  const refresh = () => {
+    const sc = dlg.querySelector('#w-scope').value;
+    const t = dlg.querySelector('#w-targets');
+    const opts = (arr) => arr.map(o => `<option value="${o.v}">${esc(o.t)}</option>`).join('');
+    let h = '';
+    if (sc === 'BRAND') h = `<label>Brand</label><select id="w-brand">${opts(['Camp', 'Ciifrol', 'Gobyk'].map(b => ({ v: b, t: b })))}</select>`;
+    if (sc === 'PRODUCT' || sc === 'PRODUCT_PACK') h = `<label>Product</label><select id="w-grade">${opts(DB.grades.map(g => ({ v: g.id, t: g.code + ' — ' + g.desc })))}</select>`;
+    if (sc === 'PACK' || sc === 'PRODUCT_PACK') h = `<label>Pack size</label><select id="w-pack">${opts(DB.packs.map(p => ({ v: p.id, t: p.label + ' (' + DB.skus.filter(s => s.pack === p.id).length + ' SKUs)' })))}</select>`;
+    if (sc === 'SKU') h = `<label>SKU</label><select id="w-sku">${opts(DB.skus.map(s => ({ v: s.id, t: s.desc })))}</select>`;
+    t.innerHTML = h;
+    preview();
+  };
+  const preview = () => {
+    const type = dlg.querySelector('#w-type').value;
+    const val = parseFloat(dlg.querySelector('#w-value').value) || 0;
+    const sc = dlg.querySelector('#w-scope').value;
+    const pick = id => { const el = dlg.querySelector('#' + id); return el ? +el.value : undefined; };
+    const brand = dlg.querySelector('#w-brand') ? dlg.querySelector('#w-brand').value : undefined;
+    const grade = pick('w-grade'), pack = pick('w-pack'), sku = pick('w-sku');
+    const rule = { id: 9999, type, scope: sc, value: val, brand, grade, pack, sku, seq: 9999 };
+    const ctxNew = { matPrice: state.matPrice, marginRules: state.marginRules.concat([rule]) };
+    let n = 0, before = null, after = null;
+    const sample = [];
+    DB.skus.forEach(s => {
+      const a = E.margin(type, s, ctxBase()), b = E.margin(type, s, ctxNew);
+      if (Math.abs(a.value - b.value) > 0.001) { n++; if (sample.length < 3) sample.push(s.desc); }
+    });
+    const one = DB.skus.find(s => {
+      if (sc === 'SKU') return s.id === sku;
+      if (sc === 'BRAND') return s.brand === brand;
+      if (sc === 'PRODUCT') return s.grade === grade;
+      if (sc === 'PACK') return s.pack === pack;
+      if (sc === 'PRODUCT_PACK') return s.grade === grade && s.pack === pack;
+      return true;
+    });
+    if (one) {
+      const r1 = E.sku(one.id, ctxBase()), r2 = E.sku(one.id, ctxNew);
+      before = r1.campInv; after = r2.campInv;
+    }
+    dlg.querySelector('#w-preview').innerHTML = n
+      ? `<b>${n} SKUs will change.</b>${before != null ? `<br>Example: ${esc(one.desc)} — net per litre ${money(before)} → <b>${money(after)}</b>.` : ''}
+         <br><span class="muted small">${esc(sample.join(' · '))}${n > 3 ? ' …' : ''}</span>`
+      : '<span class="muted">No SKU currently resolves a different value — check the scope.</span>';
+  };
+  dlg.querySelector('#w-scope').addEventListener('change', refresh);
+  dlg.querySelector('#w-type').addEventListener('change', preview);
+  dlg.querySelector('#w-value').addEventListener('input', preview);
+  dlg.addEventListener('change', e => { if (e.target.tagName === 'SELECT' && e.target.id !== 'w-scope') preview(); });
+  dlg.addEventListener('click', e => {
+    const act = e.target.dataset.act;
+    if (act === 'closewizard') dlg.remove();
+    if (act === 'applywizard') {
+      const type = dlg.querySelector('#w-type').value;
+      const val = parseFloat(dlg.querySelector('#w-value').value) || 0;
+      const sc = dlg.querySelector('#w-scope').value;
+      const reason = dlg.querySelector('#w-reason').value.trim();
+      if (!reason) { alert('Please give a reason — it is recorded in the change log.'); return; }
+      const pick = id => { const el = dlg.querySelector('#' + id); return el ? +el.value : undefined; };
+      const rule = { id: ++state.seq, type, scope: sc, value: val, seq: state.seq,
+        brand: dlg.querySelector('#w-brand') ? dlg.querySelector('#w-brand').value : undefined,
+        grade: pick('w-grade'), pack: pick('w-pack'), sku: pick('w-sku'),
+        from: new Date().toISOString().slice(0, 10), reason };
+      state.marginRules.push(rule);
+      const line = (type === 'UPLABS' ? 'Uplabs' : 'Camp') + ' margin set to Rs ' + val + ' — ' + scopeLabel(rule);
+      audit('margin_rule', type === 'UPLABS' ? 'Uplabs margin' : 'Camp margin', 'value', '', 'Rs ' + val, scopeLabel(rule), reason);
+      newVersion('In-app — margin change', '1 change', [line]);
+      save(); dlg.remove(); route();
+    }
+  });
+  refresh();
+}
+
+/* ---------------- scenario builder ---------------- */
+function openNewScenario() {
+  const dlg = document.createElement('div');
+  dlg.className = 'overlay';
+  dlg.innerHTML = `<div class="modal">
+    <h2>New scenario</h2>
+    <label>Name</label><input id="s-name" placeholder="e.g. Base oil +5%, Camp margin 210 L to 8">
+    <label>Note</label><input id="s-note" placeholder="for discussion with management">
+    <label>What does it cover</label>
+    <select id="s-scope"><option value="ALL">Every SKU</option><option value="BRAND">A brand</option>
+      <option value="GRADE">A product</option><option value="PACK">A pack size</option><option value="SKU">One SKU</option></select>
+    <div id="s-target"></div>
+    <div class="modalbar"><button class="btn ghost" data-act="closescen">Cancel</button><button class="btn" data-act="createscen">Create</button></div>
+  </div>`;
+  document.body.appendChild(dlg);
+  const refresh = () => {
+    const k = dlg.querySelector('#s-scope').value;
+    let h = '';
+    const opts = a => a.map(o => `<option value="${o.v}">${esc(o.t)}</option>`).join('');
+    if (k === 'BRAND') h = `<label>Brand</label><select id="s-brand">${opts(['Camp', 'Ciifrol', 'Gobyk'].map(b => ({ v: b, t: b })))}</select>`;
+    if (k === 'GRADE') h = `<label>Product</label><select id="s-grade">${opts(DB.grades.map(g => ({ v: g.id, t: g.code + ' — ' + g.desc })))}</select>`;
+    if (k === 'PACK') h = `<label>Pack</label><select id="s-pack">${opts(DB.packs.map(p => ({ v: p.id, t: p.label })))}</select>`;
+    if (k === 'SKU') h = `<label>SKU</label><select id="s-sku">${opts(DB.skus.map(s => ({ v: s.id, t: s.desc })))}</select>`;
+    dlg.querySelector('#s-target').innerHTML = h;
+  };
+  dlg.querySelector('#s-scope').addEventListener('change', refresh); refresh();
+  dlg.addEventListener('click', e => {
+    const a = e.target.dataset.act;
+    if (a === 'closescen') dlg.remove();
+    if (a === 'createscen') {
+      const name = dlg.querySelector('#s-name').value.trim() || 'Untitled scenario';
+      const kind = dlg.querySelector('#s-scope').value;
+      const get = id => { const el = dlg.querySelector('#' + id); return el ? el.value : undefined; };
+      const sc = { id: ++state.seq, name, note: dlg.querySelector('#s-note').value.trim(), created: nowStamp(),
+        scope: { kind, brand: get('s-brand'), grade: get('s-grade'), pack: get('s-pack'), sku: get('s-sku') }, changes: [] };
+      state.scenarios.unshift(sc); save(); dlg.remove(); window.__scen = sc.id; location.hash = '#/scenario'; route();
+    }
+  });
+}
+function openAddChange() {
+  const sc = state.scenarios.find(s => s.id === window.__scen);
+  const dlg = document.createElement('div');
+  dlg.className = 'overlay';
+  dlg.innerHTML = `<div class="modal">
+    <h2>Add a test change</h2>
+    <label>What are you changing</label>
+    <select id="c-type">
+      <option value="MAT">A raw material price</option>
+      <option value="MARGIN">A margin</option>
+      <option value="FORM">A formulation</option>
+      <option value="GRADE">Density, loss or conversion</option>
+      <option value="PACK">A packing component price</option>
+    </select>
+    <div id="c-fields"></div>
+    <div class="modalbar"><button class="btn ghost" data-act="closechange">Cancel</button><button class="btn" data-act="addchange2">Add</button></div>
+  </div>`;
+  document.body.appendChild(dlg);
+  const opts = a => a.map(o => `<option value="${o.v}">${esc(o.t)}</option>`).join('');
+  const refresh = () => {
+    const t = dlg.querySelector('#c-type').value;
+    let h = '';
+    if (t === 'MAT') h = `<label>Material</label><select id="c-mat">${opts(DB.materials.map(m => ({ v: m.id, t: m.name + ' — Rs ' + m.price })))}</select>
+      <label>New price</label><input id="c-val" type="number" step="0.01">`;
+    if (t === 'MARGIN') h = `<label>Which margin</label><select id="c-mtype"><option value="UPLABS">Uplabs</option><option value="CAMP">Camp</option></select>
+      <label>Applies to</label><select id="c-mscope"><option value="GLOBAL">Every SKU</option><option value="BRAND">A brand</option><option value="PRODUCT">A product</option><option value="PACK">A pack size</option><option value="PRODUCT_PACK">Product + pack</option><option value="SKU">One SKU</option></select>
+      <div id="c-mtargets"></div><label>New value, Rs per litre</label><input id="c-val" type="number" step="0.5">`;
+    if (t === 'FORM') h = `<label>Product</label><select id="c-grade">${opts(DB.grades.map(g => ({ v: g.id, t: g.code })))}</select>
+      <label>Material</label><select id="c-mat">${opts(DB.materials.map(m => ({ v: m.id, t: m.name })))}</select>
+      <label>New percentage (e.g. 0.07 for 7%)</label><input id="c-val" type="number" step="0.001">`;
+    if (t === 'GRADE') h = `<label>Product</label><select id="c-grade">${opts(DB.grades.map(g => ({ v: g.id, t: g.code })))}</select>
+      <label>Field</label><select id="c-field"><option value="density">Density</option><option value="conv">Conversion charge</option><option value="loss">Process loss</option></select>
+      <label>New value</label><input id="c-val" type="number" step="0.001">`;
+    if (t === 'PACK') h = `<label>Pack</label><select id="c-pack">${opts(DB.packs.map(p => ({ v: p.id, t: p.label })))}</select>
+      <label>Component</label><select id="c-field"><option value="cp">Container price</option><option value="capp">Cap price</option><option value="lp">Label price</option><option value="ctp">Carton price</option></select>
+      <label>New price</label><input id="c-val" type="number" step="0.01">`;
+    dlg.querySelector('#c-fields').innerHTML = h;
+    const ms = dlg.querySelector('#c-mscope');
+    if (ms) { const r = () => { const k = ms.value; let x = '';
+        if (k === 'BRAND') x = `<label>Brand</label><select id="c-brand">${opts(['Camp', 'Ciifrol', 'Gobyk'].map(b => ({ v: b, t: b })))}</select>`;
+        if (k === 'PRODUCT' || k === 'PRODUCT_PACK') x += `<label>Product</label><select id="c-grade2">${opts(DB.grades.map(g => ({ v: g.id, t: g.code })))}</select>`;
+        if (k === 'PACK' || k === 'PRODUCT_PACK') x += `<label>Pack</label><select id="c-pack2">${opts(DB.packs.map(p => ({ v: p.id, t: p.label })))}</select>`;
+        if (k === 'SKU') x = `<label>SKU</label><select id="c-sku">${opts(DB.skus.map(s => ({ v: s.id, t: s.desc })))}</select>`;
+        dlg.querySelector('#c-mtargets').innerHTML = x; };
+      ms.addEventListener('change', r); r();
+    }
+  };
+  dlg.querySelector('#c-type').addEventListener('change', refresh); refresh();
+  dlg.addEventListener('click', e => {
+    const a = e.target.dataset.act;
+    if (a === 'closechange') dlg.remove();
+    if (a === 'addchange2') {
+      const t = dlg.querySelector('#c-type').value;
+      const val = parseFloat(dlg.querySelector('#c-val').value);
+      if (!isFinite(val)) { alert('Enter a value.'); return; }
+      const get = id => { const el = dlg.querySelector('#' + id); return el ? el.value : undefined; };
+      if (t === 'MAT') sc.changes.push({ type: 'MAT', id: +get('c-mat'), value: val });
+      if (t === 'FORM') sc.changes.push({ type: 'FORM', grade: +get('c-grade'), mat: +get('c-mat'), value: val });
+      if (t === 'GRADE') sc.changes.push({ type: 'GRADE', id: +get('c-grade'), field: get('c-field'), value: val });
+      if (t === 'PACK') sc.changes.push({ type: 'PACK', id: +get('c-pack'), field: get('c-field'), value: val });
+      if (t === 'MARGIN') sc.changes.push({ type: 'MARGIN', mtype: get('c-mtype'), scope: get('c-mscope'), value: val,
+        brand: get('c-brand'), grade: get('c-grade2'), pack: get('c-pack2'), sku: get('c-sku') });
+      save(); dlg.remove(); route();
+    }
+  });
+}
+
+/* ---------------- router ---------------- */
+function route() {
+  const hash = location.hash || '#/login';
+  const [path, qs] = hash.split('?');
+  const params = new URLSearchParams(qs || '');
+  const app = document.getElementById('app');
+  if (!state.role) { app.innerHTML = viewLogin(); return; }
+  if (path === '#/login') { app.innerHTML = viewLogin(); return; }
+  const key = { '#/prices': 'prices', '#/u2c': 'u2c', '#/dashboard': 'dashboard', '#/materials': 'materials',
+    '#/packs': 'packs', '#/skus': 'skus', '#/margins': 'margins', '#/scenario': 'scenario', '#/audit': 'audit',
+    '#/trace': 'trace', '#/formulations': 'formulations', '#/bulk': 'bulk',
+    '#/compare': 'compare', '#/upload': 'upload', '#/sync': 'sync' }[path];
+  if (key && !allowed(key)) { location.hash = state.role === 'lubigen' ? '#/bulk' : '#/prices'; return; }
+  switch (path) {
+    case '#/prices': app.innerHTML = viewPrices(); break;
+    case '#/u2c': app.innerHTML = viewU2C(); break;
+    case '#/dashboard': app.innerHTML = viewDashboard(); break;
+    case '#/materials': app.innerHTML = viewMaterials(); break;
+    case '#/formulations': app.innerHTML = viewFormulations(); break;
+    case '#/packs': app.innerHTML = viewPacks(); break;
+    case '#/skus': app.innerHTML = viewSkus(); break;
+    case '#/trace': app.innerHTML = viewTrace(params.get('q') || ''); break;
+    case '#/margins': app.innerHTML = viewMargins(); break;
+    case '#/scenario': app.innerHTML = viewScenario(); break;
+    case '#/bulk': app.innerHTML = viewBulk(); break;
+    case '#/compare': app.innerHTML = viewCompare(); break;
+    case '#/upload': app.innerHTML = viewUpload(); break;
+    case '#/sync': app.innerHTML = viewSync(); break;
+    case '#/audit': app.innerHTML = viewAudit(); break;
+    default: app.innerHTML = viewPrices();
+  }
+  const qi = document.getElementById('q');
+  if (qi) { qi.focus(); qi.setSelectionRange(qi.value.length, qi.value.length); }
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const a = t.dataset.act;
+  if (a === 'role') { const r = t.dataset.role;
+    window.__qty = {}; window.__sku = null; window.__scen = null; window.__u2cq = ''; window.__u2cbrand = 'ALL';
+    if (r === 'open') { state.role = 'open'; save(); location.hash = '#/prices'; route(); }
+    else openLoginModal(r, () => { state.role = r; save(); location.hash = r === 'uplabs' ? '#/dashboard' : '#/bulk'; route(); });
+  }
+  if (a === 'logout') { state.role = null; save(); location.hash = '#/login'; route(); }
+  if (a === 'go') { location.hash = t.dataset.href; route(); }
+  if (a === 'cust') { window.__cust = t.dataset.cust; route(); }
+  if (a === 'grade') { window.__grade = +t.dataset.id; route(); }
+  if (a === 'editpack') openPackEdit(+t.dataset.id);
+  if (a === 'trace') { window.__sku = +t.dataset.id; route(); }
+  if (a === 'print') { window.print(); }
+  if (a === 'export-prices') exportPrices(t.dataset.cust);
+  if (a === 'u2cbrand') { window.__u2cbrand = t.dataset.b; route(); }
+  if (a === 'cmpxlsx') exportCompare();
+  if (a === 'template') uploadTemplate();
+  if (a === 'exportmaster') exportMaster();
+  if (a === 'exportchanges') exportChanges();
+  if (a === 'applysync') applySync();
+  if (a === 'cancelsync') { window.__sync = null; route(); }
+  if (a === 'staleok') { window.__staleOK = true; route(); }
+  if (a === 'applyupload') applyUpload();
+  if (a === 'cancelupload') { window.__upload = null; route(); }
+  if (a === 'u2cxlsx') exportU2C();
+  if (a === 'clearqty') { window.__qty = {}; route(); }
+  if (a === 'fxlsx') exportFormulations(t.dataset.mode, window.__grade);
+  if (a === 'tracexlsx') exportTrace(+t.dataset.id);
+  if (a === 'bulkxlsx') exportBulk();
+  if (a === 'auditxlsx') exportAudit();
+  if (a === 'openver') { window.__ver = window.__ver === +t.dataset.id ? null : +t.dataset.id; route(); }
+  if (a === 'marginwizard') openMarginWizard();
+  if (a === 'newscen') openNewScenario();
+  if (a === 'openscen') { window.__scen = +t.dataset.id; route(); }
+  if (a === 'backscen') { window.__scen = null; route(); }
+  if (a === 'delscen') { if (confirm('Delete this scenario?')) { state.scenarios = state.scenarios.filter(s => s.id !== +t.dataset.id); save(); route(); } }
+  if (a === 'addchange') openAddChange();
+  if (a === 'delchange') { const sc = state.scenarios.find(s => s.id === window.__scen); sc.changes.splice(+t.dataset.i, 1); save(); route(); }
+  if (a === 'delrule') {
+    const id = +t.dataset.id; const r = state.marginRules.find(x => x.id === id);
+    if (confirm('Remove this margin rule? Affected SKUs fall back to the more general rule.')) {
+      state.marginRules = state.marginRules.filter(x => x.id !== id);
+      audit('margin_rule', scopeLabel(r), 'value', 'Rs ' + r.value, '(removed)', scopeLabel(r), 'Removed');
+      newVersion('In-app — margin removed', '1 change', [(r.type === 'UPLABS' ? 'Uplabs' : 'Camp') + ' margin of Rs ' + r.value + ' removed — ' + scopeLabel(r)]);
+      save(); route();
+    }
+  }
+  if (a === 'testthis') { window.__scen = null; location.hash = '#/scenario'; route(); }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.dataset.act === 'qty') {
+    const id = +e.target.dataset.id, v = parseFloat(e.target.value) || 0;
+    window.__qty = window.__qty || {};
+    if (v > 0) window.__qty[id] = v; else delete window.__qty[id];
+    const r = E.sku(id, ctxBase()); const L = P(r.sku.pack).litres;
+    const cell = document.querySelector('.amt[data-id="' + id + '"]');
+    if (cell) cell.textContent = v > 0 ? money(r.upInv * L * v) : '—';
+    u2cTotals();
+    return;
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.dataset.act === 'cmpsel') {
+    const picks = cmpPicks(); picks[+e.target.dataset.i] = e.target.value ? +e.target.value : null;
+    window.__cmp = picks; route(); return;
+  }
+  if (e.target.id === 'upfile' && e.target.files && e.target.files[0]) { handleUpload(e.target.files[0]); return; }
+  if (e.target.id === 'syncfile' && e.target.files && e.target.files[0]) { readChanges(e.target.files[0]); return; }
+  if (e.target.dataset.act === 'matfield') {
+    const id = +e.target.dataset.id, field = e.target.dataset.field, v = parseFloat(e.target.value);
+    const m = M(id);
+    if (!isFinite(v)) { route(); return; }
+    state.matEdit = state.matEdit || {};
+    state.matEdit[id] = state.matEdit[id] || {};
+    const was = state.matEdit[id][field] != null ? state.matEdit[id][field] : m[field];
+    if (near(v, m[field])) delete state.matEdit[id][field];
+    else state.matEdit[id][field] = v;
+    if (!near(was, v)) {
+      const label = field === 'density' ? 'Density' : 'Inbound transport';
+      audit('material', m.name, label, num(was, 4), num(v, 4), 'Raw material ' + label.toLowerCase(), 'Edited on screen');
+      newVersion('In-app — material ' + label.toLowerCase(), '1 change',
+        [m.name + ' ' + label.toLowerCase() + ' ' + num(was, 4) + ' to ' + num(v, 4)]);
+    }
+    save(); route(); return;
+  }
+  if (e.target.dataset.act === 'matprice') {
+    const id = +e.target.dataset.id;
+    const v = parseFloat(e.target.value);
+    const m = M(id);
+    if (!isFinite(v)) { route(); return; }
+    const was = state.matPrice[id] != null ? state.matPrice[id] : m.price;
+    if (near(v, m.price)) delete state.matPrice[id];
+    else state.matPrice[id] = v;
+    if (!near(was, v)) {
+      audit('material', m.name, 'price', 'Rs ' + money(was), 'Rs ' + money(v), 'Raw material price', 'Edited on screen');
+      newVersion('In-app — material price', '1 change', [m.name + ' price Rs ' + money(was) + ' to Rs ' + money(v)]);
+    }
+    save(); route();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'q') { location.hash = '#/trace?q=' + encodeURIComponent(e.target.value); route(); }
+  if (e.key === 'Enter' && e.target.id === 'u2cq') { window.__u2cq = e.target.value; route(); }
+});
+
+window.addEventListener('hashchange', route);
+route();
+</script>
+</body>
+</html>
